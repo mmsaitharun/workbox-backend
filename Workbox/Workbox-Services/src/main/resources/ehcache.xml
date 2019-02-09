@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://www.ehcache.org/ehcache.xsd" updateCheck="true"
+	monitoring="autodetect" dynamicConfig="true">
+
+	<diskStore path="java.io.tmpdir" />
+
+	<cache name="taskInstanceCache" maxEntriesLocalHeap="0"
+		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
+		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="processInstanceCache" maxEntriesLocalHeap="0"
+		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
+		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="ownersCache" maxEntriesLocalHeap="0"
+		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
+		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="samlHeaderKeyTC" maxEntriesLocalHeap="0"
+		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
+		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+		<persistence strategy="localTempSwap" />
+	</cache>
+
+	<cache name="samlHeaderKeyTI" maxEntriesLocalHeap="0"
+		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
+		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+		<persistence strategy="localTempSwap" />
+	</cache>
+</ehcache>
