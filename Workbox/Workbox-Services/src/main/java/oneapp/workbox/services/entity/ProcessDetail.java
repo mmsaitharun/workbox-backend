@@ -58,6 +58,14 @@ public class ProcessDetail {
 	private String region;
 	@Column(name = "PROJECT_ID", length = 50)
 	private String projectId;
+	@Column(name = "NODE_ID", length = 50)
+	private String nodeId;
+	@Column(name = "KEY", length = 50)
+	private String key;
+	@Column(name = "SUB_KEY", length = 50)
+	private String subKey;
+	@Column(name = "COUNTRY", length = 50)
+	private String country;
 	
 	@Transient
 	private String requestId;
@@ -220,14 +228,47 @@ public class ProcessDetail {
 		this.projectId = projectId;
 	}
 
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public String getSubKey() {
+		return subKey;
+	}
+
+	public void setSubKey(String subKey) {
+		this.subKey = subKey;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
 	@Override
 	public String toString() {
 		return "ProcessDetail [processId=" + processId + ", leadCategory=" + leadCategory + ", materialType="
 				+ materialType + ", materialUniqueId=" + materialUniqueId + ", materialId=" + materialId
 				+ ", materialDescription=" + materialDescription + ", requestedBy=" + requestedBy + ", leadCountry="
 				+ leadCountry + ", projectDescription=" + projectDescription + ", requiredTaskCsv=" + requiredTaskCsv
-				+ ", region=" + region + ", projectId=" + projectId + ", requestId=" + requestId + ", processStatus="
-				+ processStatus + "]";
+				+ ", region=" + region + ", projectId=" + projectId + ", nodeId=" + nodeId + ", key=" + key
+				+ ", subKey=" + subKey + ", country=" + country + ", requestId=" + requestId + ", processStatus="
+				+ processStatus + ", processName=" + processName + ", processSubject=" + processSubject + "]";
 	}
 
 }

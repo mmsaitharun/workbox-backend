@@ -555,16 +555,9 @@ public class ServicesUtil {
 			}
 			try {
 				DateFormat formatterT = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS");
-				DateFormat newDf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-				date = newDf.parse(newDf.format(formatterT.parse(template)));
-				System.err.println("formatterT.parse(template)" + formatterT.parse(template)
-						+ "newDf.format(formatterT.parse(template)" + newDf.format(formatterT.parse(template))
-						+ "newDf.parse(newDf.format(formatterT.parse(template)))"
-						+ newDf.parse(newDf.format(formatterT.parse(template))));
-
-				System.err.println("[PMC][WorkBoxFacade][resultAsDate][o]" + o + "[template]" + template + "[date]"
-						+ date + "yyyy-MM-dd hh:mm:ss.SSS");
+//				DateFormat newDf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//				date = newDf.parse(newDf.format(formatterT.parse(template)));
+				date = formatterT.parse(template);
 			} catch (Exception e) {
 				System.err.println("resultTAsDate " + e.getMessage());
 			}

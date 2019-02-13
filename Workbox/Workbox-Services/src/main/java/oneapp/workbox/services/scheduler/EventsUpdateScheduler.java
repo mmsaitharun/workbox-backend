@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import oneapp.workbox.services.adapters.AdminParse;
@@ -16,7 +15,7 @@ import oneapp.workbox.services.dao.TaskOwnersDao;
 import oneapp.workbox.services.dto.TaskOwnersDto;
 import oneapp.workbox.services.entity.ProjectProcessMapping;
 
-@Component
+@Component("eventsScheduler")
 public class EventsUpdateScheduler {
 
 	@Autowired
@@ -34,7 +33,7 @@ public class EventsUpdateScheduler {
 	@Autowired
 	ProjectProcessDao prjPrcMapping;
 
-	@Scheduled(fixedDelay = 6000)
+//	@Scheduled(fixedDelay = 6000)
 	public void updateEvents() {
 		System.err.println("[PMC]EventsUpdateScheduler started : " + new Date());
 		AdminParseResponse parseResponse = parse.parseDetail();
@@ -53,7 +52,7 @@ public class EventsUpdateScheduler {
 		parse.updateCustomAttributes(parseResponse.getTasks());
 	}
 	
-	@Scheduled(fixedDelay = 6000)
+//	@Scheduled(fixedDelay = 6000)
 	public void updateCompleteEvents() {
 		System.err.println("[PMC]EventsUpdateScheduler Completed started : " + new Date());
 		AdminParseResponse parseResponse = parse.parseCompleteDetail();

@@ -5,6 +5,9 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+
+import oneapp.workbox.services.util.WorkFlowTaskStatus;
 
 @MappedSuperclass
 public class WorkFlowArtifact implements Serializable {
@@ -19,13 +22,14 @@ public class WorkFlowArtifact implements Serializable {
 	}
 
 	public WorkFlowArtifact(String id, String artifactName, String artifactClassDefinition, String artifactId,
-			String workFlowDefId) {
+			String workFlowDefId, String artifactIcon) {
 		super();
 		this.id = id;
 		this.artifactName = artifactName;
 		this.artifactClassDefinition = artifactClassDefinition;
 		this.artifactId = artifactId;
 		this.workFlowDefId = workFlowDefId;
+		this.artifactIcon = artifactIcon;
 	}
 
 	@Id
@@ -44,6 +48,12 @@ public class WorkFlowArtifact implements Serializable {
 	@Id
 	@Column(name = "WORKFLOW_DEFINITION_ID", length = 60)
 	private String workFlowDefId;
+	
+	@Column(name = "ARTIFACT_ICON", length = 100)
+	private String artifactIcon;
+	
+	@Transient
+	private WorkFlowTaskStatus activityStatus;
 
 	public String getId() {
 		return id;
@@ -85,10 +95,27 @@ public class WorkFlowArtifact implements Serializable {
 		this.workFlowDefId = workFlowDefId;
 	}
 
+	public String getArtifactIcon() {
+		return artifactIcon;
+	}
+
+	public void setArtifactIcon(String artifactIcon) {
+		this.artifactIcon = artifactIcon;
+	}
+
+	public WorkFlowTaskStatus getActivityStatus() {
+		return activityStatus;
+	}
+
+	public void setActivityStatus(WorkFlowTaskStatus activityStatus) {
+		this.activityStatus = activityStatus;
+	}
+
 	@Override
 	public String toString() {
 		return "WorkFlowArtifact [id=" + id + ", artifactName=" + artifactName + ", artifactClassDefinition="
-				+ artifactClassDefinition + ", artifactId=" + artifactId + ", workFlowDefId=" + workFlowDefId + "]";
+				+ artifactClassDefinition + ", artifactId=" + artifactId + ", workFlowDefId=" + workFlowDefId
+				+ ", artifactIcon=" + artifactIcon + "]";
 	}
 
 }

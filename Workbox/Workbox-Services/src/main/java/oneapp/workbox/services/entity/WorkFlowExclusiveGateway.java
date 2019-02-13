@@ -18,8 +18,8 @@ public class WorkFlowExclusiveGateway extends WorkFlowArtifact {
 	}
 
 	public WorkFlowExclusiveGateway(String id, String artifactName, String artifactClassDefinition, String artifactId, String workFlowDefId,
-			String gatewayDefault) {
-		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId);
+			String gatewayDefault, String artifactIcon) {
+		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId, artifactIcon);
 		this.gatewayDefault = gatewayDefault;
 	}
 

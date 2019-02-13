@@ -16,8 +16,8 @@ public class WorkFlowEvent extends WorkFlowArtifact {
 		super();
 	}
 
-	public WorkFlowEvent(String id, String artifactName, String artifactClassDefinition, String artifactId, String workFlowDefId) {
-		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId);
+	public WorkFlowEvent(String id, String artifactName, String artifactClassDefinition, String artifactId, String workFlowDefId, String artifactIcon) {
+		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId, artifactIcon);
 	}
 
 	@Override

@@ -24,14 +24,14 @@ public class WorkFlowModelController {
 	}
 	
 	@RequestMapping(value = "/getWorkFlowModel", method = RequestMethod.GET)
-	public WorkFlowModelMaster getWorkFlowModel(@RequestParam String workFlowDefId) {
-		return wFmodelDao.getWorkFlowModel(workFlowDefId);
+	public WorkFlowModelMaster getWorkFlowModel(@RequestParam String workFlowDefId, @RequestParam(required=false) String processId) {
+		return wFmodelDao.getWorkFlowModel(workFlowDefId, processId);
 	}
 	
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(HibernateConfiguration.class);
 		WorkFlowModelController myController = applicationContext.getBean(WorkFlowModelController.class);
-		System.out.println(myController.getWorkFlowModel("detailed_scoping_wf").getNetworkSequence());
+		System.out.println(myController.getWorkFlowModel("material_definition_wf", "196dabbc-2e06-11e9-8db4-00163e836154").getActivities());
 		applicationContext.close();
 	}
 

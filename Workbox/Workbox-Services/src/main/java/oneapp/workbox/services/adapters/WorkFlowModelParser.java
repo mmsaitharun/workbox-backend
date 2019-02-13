@@ -19,16 +19,21 @@ public class WorkFlowModelParser {
 		System.out.println(WorkFlowModelParser.parseWorkflowModel("plant_definition_wf"));
 	}
 
-	static final String WFS_MODEL_CLASS = "com.sap.bpm.wfs.Model";
-	static final String WFS_START_EVENT_CLASS = "com.sap.bpm.wfs.StartEvent";
-	static final String WFS_END_EVENT_CLASS = "com.sap.bpm.wfs.EndEvent";
-	static final String WFS_USER_TASK_CLASS = "com.sap.bpm.wfs.UserTask";
-	static final String WFS_PARALLEL_GATEWAY_CLASS = "com.sap.bpm.wfs.ParallelGateway";
-	static final String WFS_SERVICE_TASK_CLASS = "com.sap.bpm.wfs.ServiceTask";
-	static final String WFS_EXCLUSIVE_GATEWAY_CLASS = "com.sap.bpm.wfs.ExclusiveGateway";
-	static final String WFS_SCRIPT_TASK_CLASS = "com.sap.bpm.wfs.ScriptTask";
-	static final String WFS_SEQUENCE_FLOW_CLASS = "com.sap.bpm.wfs.SequenceFlow";
-	static final String WFS_LAST_IDS_CLASS = "com.sap.bpm.wfs.LastIDs";
+	public static final String WFS_MODEL_CLASS = "com.sap.bpm.wfs.Model";
+	public static final String WFS_START_EVENT_CLASS = "com.sap.bpm.wfs.StartEvent";
+	public static final String WFS_END_EVENT_CLASS = "com.sap.bpm.wfs.EndEvent";
+	public static final String WFS_USER_TASK_CLASS = "com.sap.bpm.wfs.UserTask";
+	public static final String WFS_PARALLEL_GATEWAY_CLASS = "com.sap.bpm.wfs.ParallelGateway";
+	public static final String WFS_SERVICE_TASK_CLASS = "com.sap.bpm.wfs.ServiceTask";
+	public static final String WFS_EXCLUSIVE_GATEWAY_CLASS = "com.sap.bpm.wfs.ExclusiveGateway";
+	public static final String WFS_SCRIPT_TASK_CLASS = "com.sap.bpm.wfs.ScriptTask";
+	public static final String WFS_SEQUENCE_FLOW_CLASS = "com.sap.bpm.wfs.SequenceFlow";
+	public static final String WFS_LAST_IDS_CLASS = "com.sap.bpm.wfs.LastIDs";
+	
+	static final String WFS_START_EVENT_ICON = "sap-icon://begin";
+	static final String WFS_END_EVENT_ICON = "sap-icon://stop";
+	static final String WFS_USER_TASK_ICON = "sap-icon://person-placeholder";
+	static final String WFS_AUTOMATED_TASK_ICON = "sap-icon://settings";
 
 	public static WorkFlowModelMaster parseWorkflowModel(String workFlowDefinitionId) {
 		WorkFlowModelMaster workflowModelMaster = null;
@@ -151,7 +156,28 @@ public class WorkFlowModelParser {
 		activity.setArtifactName(jsonArtifact.optString("name"));
 		activity.setActivityPriority(jsonArtifact.optString("priority"));
 		activity.setWorkFlowDefId(workFlowDefId);
+		setActivityIcon(activity);
 		return activity;
+	}
+
+	private static void setActivityIcon(WorkFlowActivity activity) {
+		if(!ServicesUtil.isEmpty(activity) && !ServicesUtil.isEmpty(activity.getArtifactClassDefinition())) {
+			switch(activity.getArtifactClassDefinition()) {
+			case WFS_START_EVENT_CLASS:
+				activity.setArtifactIcon(WFS_START_EVENT_ICON);
+				break;
+			case WFS_END_EVENT_CLASS:
+				activity.setArtifactIcon(WFS_END_EVENT_ICON);
+				break;
+			case WFS_USER_TASK_CLASS:
+				activity.setArtifactIcon(WFS_USER_TASK_ICON);
+				break;
+			case WFS_SCRIPT_TASK_CLASS:
+			case WFS_SERVICE_TASK_CLASS:
+				activity.setArtifactIcon(WFS_AUTOMATED_TASK_ICON);
+				break;
+			}
+		}
 	}
 
 }

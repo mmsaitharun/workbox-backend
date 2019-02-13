@@ -626,4 +626,221 @@ public class AdminParse {
 		}
 		return customTemplateMap;
 	}
+	
+	public AdminParseResponse parseNewDetail() {
+		System.err.println("Start : " + System.currentTimeMillis());
+
+		List<TaskEventsDto> tasks = null;
+		List<ProcessEventsDto> processes = null;
+		List<TaskOwnersDto> owners = null;
+		List<ProjectProcessMapping> prjPrcMaps = null;
+		List<ProcessDetail> processDetails = null;
+
+		JSONObject taskObject = null;
+		JSONObject processObject = null;
+
+		TaskEventsDto task = null;
+		ProcessEventsDto process = null;
+		TaskOwnersDto owner = null;
+		ProjectProcessMapping prjPrcMap = null;
+		ProcessDetail processDetail = null;
+
+		JSONArray taskList = fetchInstances(
+				PMCConstant.REQUEST_URL_INST + "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes");
+		JSONArray processList = fetchInstances(PMCConstant.REQUEST_URL_INST + "workflow-instances?status=RUNNING&status=ERRONEOUS&status=CANCELED&status=COMPLETED");
+
+		if (!ServicesUtil.isEmpty(taskList) && !ServicesUtil.isEmpty(processList) && taskList.length() > 0
+				&& processList.length() > 0) {
+			tasks = new ArrayList<TaskEventsDto>();
+			processes = new ArrayList<ProcessEventsDto>();
+			owners = new ArrayList<TaskOwnersDto>();
+			prjPrcMaps = new ArrayList<ProjectProcessMapping>();
+			processDetails = new ArrayList<ProcessDetail>();
+
+			for (Object object : processList) {
+				processObject = (JSONObject) object;
+				process = new ProcessEventsDto();
+				prjPrcMap = new ProjectProcessMapping();
+//				processDetail = new ProcessDetail();
+				
+				process.setProcessId(processObject.optString("id"));
+				
+				process.setName(processObject.optString("definitionId"));
+				process.setSubject(processObject.optString("subject"));
+				process.setStatus(processObject.optString("status"));
+
+				
+				process.setRequestId(processObject.optString("businessKey"));
+				process.setStartedAt(ServicesUtil.isEmpty(processObject.optString("startedAt")) ? null
+						: ServicesUtil.convertAdminFromStringToDate(processObject.optString("startedAt")));
+				process.setCompletedAt(ServicesUtil.isEmpty(processObject.optString("completedAt")) ? null
+						: ServicesUtil.convertAdminFromStringToDate(processObject.optString("completedAt")));
+				process.setStartedBy(processObject.optString("startedBy"));
+				UserDetailsDto uDetails = userDetails.getUserDetails(new UserDetailsDto(process.getStartedBy(), null));
+				if(!ServicesUtil.isEmpty(uDetails)) {
+					process.setStartedByDisplayName(uDetails.getDisplayName());
+				}
+				
+				processes.add(process);
+			}
+
+			for (Object object : taskList) {
+				taskObject = (JSONObject) object;
+
+				task = new TaskEventsDto();
+
+				task.setEventId(taskObject.optString("id"));
+				task.setProcessId(taskObject.optString("workflowInstanceId"));
+				
+				task.setProcessName(taskObject.optString("workflowDefinitionId"));
+				
+				task.setCreatedAt(ServicesUtil.convertAdminFromStringToDate(taskObject.optString("createdAt")));
+				task.setDescription(taskObject.optString("description"));
+				task.setCurrentProcessor(taskObject.optString("processor"));
+				
+				if(!ServicesUtil.isEmpty(task.getCurrentProcessor())) {
+					UserDetailsDto processorDetails = userDetails.getUserDetails(new UserDetailsDto(task.getCurrentProcessor(), null));
+					if(!ServicesUtil.isEmpty(processorDetails)) {
+						task.setCurrentProcessorDisplayName(processorDetails.getDisplayName());
+					}
+				}
+				
+				task.setSubject(taskObject.optString("subject"));
+				task.setStatus(taskObject.optString("status"));
+				task.setName(taskObject.optString("definitionId"));
+				task.setPriority(taskObject.optString("priority"));
+				task.setCompletedAt(ServicesUtil.isEmpty(taskObject.optString("completedAt")) ? null
+						: ServicesUtil.convertFromStringToDate(taskObject.optString("completedAt")));
+
+				if(ServicesUtil.isEmpty(taskObject.optString("dueDate"))){
+					task.setCompletionDeadLine(new Date(task.getCreatedAt().getTime() + (1000 * 60 * 60 * 24 * 5)));
+					task.setSlaDueDate(new Date(task.getCreatedAt().getTime() + (1000 * 60 * 60 * 24 * 5)));
+				} else {
+					task.setCompletionDeadLine(ServicesUtil.convertAdminFromStringToDate(taskObject.optString("dueDate")));
+					task.setSlaDueDate(ServicesUtil.convertAdminFromStringToDate(taskObject.optString("dueDate")));
+				}
+				
+				task.setOrigin("SCP");
+				
+				processDetail = fetchProcessContextDetail(taskObject);
+				
+				if(!ServicesUtil.isEmpty(processDetail)) {
+					prjPrcMap.setProcessId(process.getProcessId());
+					prjPrcMap.setProjectId(processDetail.getProjectId());
+					
+					processDetail.setProcessId(process.getProcessId());
+				}
+
+				if(!ServicesUtil.isEmpty(prjPrcMap.getProcessId()) && !ServicesUtil.isEmpty(prjPrcMap.getProjectId())){
+					prjPrcMaps.add(prjPrcMap);
+				}
+				
+				if(!ServicesUtil.isEmpty(processDetail)) {
+					processDetails.add(processDetail);
+				}
+				
+				tasks.add(task);
+
+				if (!ServicesUtil.isEmpty(task.getCurrentProcessor())) {
+					owner = new TaskOwnersDto();
+					owner.setEventId(task.getEventId());
+					owner.setTaskOwner(task.getCurrentProcessor());
+					owner.setIsProcessed(true);
+					UserDetailsDto ownerDetails = userDetails.getUserDetails(new UserDetailsDto(owner.getTaskOwner(), null));
+					if(!ServicesUtil.isEmpty(ownerDetails)) {
+						owner.setOwnerEmail(ownerDetails.getEmailId());
+						owner.setTaskOwnerDisplayName(ownerDetails.getDisplayName());
+					}
+					owners.add(owner);
+				}
+
+				JSONArray userArray = taskObject.optJSONArray("recipientUsers");
+				List<String> recepients = new ArrayList<String>();
+				if (!ServicesUtil.isEmpty(userArray) && userArray.length() > 0) {
+					for (Object user : userArray) {
+						recepients.add((String) user);
+					}
+				}
+				JSONArray groupArray = taskObject.optJSONArray("recipientGroups");
+				for (Object group : groupArray) {
+					recepients.addAll(getRecipientUserOfGroup((String) group));
+				}
+
+				for (String recepient : recepients) {
+					owner = new TaskOwnersDto();
+					owner.setEventId(task.getEventId());
+					owner.setTaskOwner(recepient);
+					owner.setIsProcessed(false);
+					UserDetailsDto ownerDetails = userDetails.getUserDetails(new UserDetailsDto(owner.getTaskOwner(), null));
+					if(!ServicesUtil.isEmpty(ownerDetails)) {
+						owner.setOwnerEmail(ownerDetails.getEmailId());
+						owner.setTaskOwnerDisplayName(ownerDetails.getDisplayName());
+					}
+					owners.add(owner);
+				}
+
+			}
+
+		}
+		System.err.println("End : " + System.currentTimeMillis());
+		return new AdminParseResponse(tasks, processes, owners, null, 0, prjPrcMaps, processDetails);
+	}
+
+	/**
+	 * @param processId
+	 * @return
+	 */
+	private ProcessDetail fetchProcessContextDetail(JSONObject taskObject) {
+		ProcessDetail processContextDetail = null;
+		JSONObject taskAttribute = null;
+		if (!ServicesUtil.isEmpty(taskObject)) {
+			JSONArray taskAttributes = taskObject.optJSONArray("attributes");
+			processContextDetail = new ProcessDetail();
+			if(!ServicesUtil.isEmpty(taskAttributes) && taskAttributes.length() > 0) {
+				for(Object object : taskAttributes) {
+					taskAttribute = (JSONObject) object;
+					setProcessDetail(processContextDetail, taskAttribute);
+				}
+			}
+			processContextDetail.setProcessId(taskObject.optString("workflowInstanceId"));
+			processContextDetail.setProcessName(taskObject.optString("workflowDefinitionId"));
+		}
+		return processContextDetail;
+	}
+
+	private void setProcessDetail(ProcessDetail processContextDetail, JSONObject taskAttribute) {
+		if (!ServicesUtil.isEmpty(taskAttribute)) {
+			switch (taskAttribute.optString("id")) {
+			case "ProjectId":
+				processContextDetail.setProjectId(taskAttribute.optString("value"));
+				break;
+			case "MaterialId":
+				processContextDetail.setMaterialId(taskAttribute.optString("value"));
+				break;
+			case "ProjectDescription":
+				processContextDetail.setProjectDescription(taskAttribute.optString("value"));
+				break;
+			case "MaterialDescription":
+				processContextDetail.setMaterialDescription(taskAttribute.optString("value"));
+				break;
+			case "MaterialType":
+				processContextDetail.setMaterialType(taskAttribute.optString("value"));
+				break;
+			case "NodeId":
+				processContextDetail.setNodeId(taskAttribute.optString("value"));
+				break;
+			case "Key":
+				processContextDetail.setKey(taskAttribute.optString("value"));
+				break;
+			case "SubKey":
+				processContextDetail.setSubKey(taskAttribute.optString("value"));
+				break;
+			case "Country":
+				processContextDetail.setCountry(taskAttribute.optString("value"));
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }

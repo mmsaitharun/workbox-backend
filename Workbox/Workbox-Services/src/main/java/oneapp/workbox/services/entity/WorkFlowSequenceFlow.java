@@ -18,8 +18,8 @@ public class WorkFlowSequenceFlow extends WorkFlowArtifact {
 	}
 
 	public WorkFlowSequenceFlow(String id, String artifactName, String artifactClassDefinition, String artifactId, String workFlowDefId,
-			String sourceRef, String targetRef) {
-		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId);
+			String sourceRef, String targetRef, String artifactIcon) {
+		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId, artifactIcon);
 		this.sourceRef = sourceRef;
 		this.targetRef = targetRef;
 	}

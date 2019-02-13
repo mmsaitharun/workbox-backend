@@ -18,8 +18,8 @@ public class WorkFlowActivity extends WorkFlowArtifact {
 	}
 
 	public WorkFlowActivity(String id, String artifactName, String artifactClassDefinition, String artifactId, String workFlowDefId,
-			String activityPriority) {
-		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId);
+			String activityPriority, String artifactIcon) {
+		super(id, artifactName, artifactClassDefinition, artifactId, workFlowDefId, artifactIcon);
 		this.activityPriority = activityPriority;
 	}
 
