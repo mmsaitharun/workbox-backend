@@ -21,6 +21,7 @@
 		<slf4j.api.version>1.7.25</slf4j.api.version>
 		<sap.tomcat.sdk.version>3.73.18.1</sap.tomcat.sdk.version>
 		<sap.hana.cloud.db.version>2.3.56</sap.hana.cloud.db.version>
+		<jsoniter.version>0.9.23</jsoniter.version>
 
 		<java.version>1.8</java.version>
 	</properties>
@@ -60,6 +61,14 @@
 			<version>${sap.tomcat.sdk.version}</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<!-- JSON Iter Library -->
+		<dependency>
+			<groupId>com.jsoniter</groupId>
+			<artifactId>jsoniter</artifactId>
+			<version>${jsoniter.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

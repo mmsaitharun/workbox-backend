@@ -1,5 +1,7 @@
 package oneapp.workbox.web.controller;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,8 +38,8 @@ public class MyController {
 	}
 	
 	@RequestMapping(value = "/getTaskDetails", method = RequestMethod.GET)
-	public AdminParseResponse getDetails() {
-		return adminParse.parseNewDetail();
+	public AdminParseResponse getDetails() throws IOException {
+		return adminParse.parseAPI();
 	}
 
 }

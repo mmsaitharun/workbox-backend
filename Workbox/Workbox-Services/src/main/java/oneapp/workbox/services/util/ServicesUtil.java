@@ -623,7 +623,7 @@ public class ServicesUtil {
 		}
 		return toString;
 	}
-
+	
 	public static Date convertFromStringToDate(String fromString) {
 		Date date = null;
 		try {

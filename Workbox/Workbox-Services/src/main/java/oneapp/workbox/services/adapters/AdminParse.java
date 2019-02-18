@@ -1,5 +1,6 @@
 package oneapp.workbox.services.adapters;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,8 +15,12 @@ import org.apache.http.HttpResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Component;
 
+import com.jsoniter.JsonIterator;
+
+import oneapp.workbox.services.config.HibernateConfiguration;
 import oneapp.workbox.services.dao.CustomAttributeDao;
 import oneapp.workbox.services.dao.GroupsMappingDao;
 import oneapp.workbox.services.dao.ProcessConfigDao;
@@ -30,6 +35,7 @@ import oneapp.workbox.services.dto.UserDetailsDto;
 import oneapp.workbox.services.dto.WorkBoxDto;
 import oneapp.workbox.services.entity.CustomAttributeTemplate;
 import oneapp.workbox.services.entity.CustomAttributeValue;
+import oneapp.workbox.services.entity.GroupsMapping;
 import oneapp.workbox.services.entity.ProcessDetail;
 import oneapp.workbox.services.entity.ProjectProcessMapping;
 import oneapp.workbox.services.util.PMCConstant;
@@ -38,6 +44,9 @@ import oneapp.workbox.services.util.ServicesUtil;
 
 @Component
 public class AdminParse {
+	
+	private Map<String, UserDetailsDto> usersMap;
+	private Map<String, String> groupMappings;
 	
 	@Autowired
 	UserDetailsDao userDetails;
@@ -444,7 +453,81 @@ public class AdminParse {
 	}
 
 	private List<String> getRecipientUserOfGroup(String groupName) {
-		return groupsMapping.getUsersUnderGroup(groupName);
+		return getUsersUnderGroup(groupName);
+	}
+	
+	public String getGroupsMapping(String groupName) {
+		String groups = null;
+		if(ServicesUtil.isEmpty(groupMappings)) {
+			refreshAllGroupsMappings();
+			groups = getGroupsMapping(groupName);
+		} else {
+			groups = groupMappings.get(groupName);
+		}
+		return groups;
+	}
+	
+	private List<String> getUsersUnderGroup(String groupName) {
+		String users = this.getGroupsMapping(groupName);
+		List<String> groupUsers = null;
+		if(!ServicesUtil.isEmpty(users)) {
+			groupUsers = new ArrayList<>();
+			if(!ServicesUtil.isEmpty(users) && users.contains(",")) {
+				String[] usersArray = users.split(",");
+				for(String u : usersArray) {
+					groupUsers.add(u.trim());
+				}
+			} else if(!ServicesUtil.isEmpty(users) && !users.contains(",")) {
+				groupUsers.add(users.trim());
+			}
+		}
+		return groupUsers;
+	}
+	
+	private void emptyGroupsMapping() {
+		groupMappings = null;
+	}
+	
+	private Map<String, String> refreshAllGroupsMappings() {
+		Map<String, String> mappings = new HashMap<String, String>();
+		List<GroupsMapping> groupMappings = groupsMapping.getGroupMappingsResponse();
+		for(GroupsMapping group : groupMappings) {
+			mappings.put(group.getGroupName(), group.getUsers());
+		}
+		this.groupMappings = mappings;
+		return mappings;
+	}
+	
+	private UserDetailsDto getUserDetails(UserDetailsDto userDetail) {
+		UserDetailsDto user = null;
+		if(ServicesUtil.isEmpty(usersMap)) {
+			refreshUserDetailsMap();
+			user = getUserDetails(userDetail);
+		} else {
+			user = usersMap.get(userDetail.getUserId());
+		}
+		return user;
+	}
+	
+	private Map<String, UserDetailsDto> refreshUserDetailsMap() {
+		Map<String, UserDetailsDto> userDetailsMap = new HashMap<String, UserDetailsDto>();
+		UserDetailsDto userDetails = null;
+		List<Object[]> resultList = this.userDetails.getUserDetailResponse();
+		if(!ServicesUtil.isEmpty(resultList) && resultList.size() > 0) {
+			for(Object[] object : resultList) {
+				userDetails = new UserDetailsDto();
+				userDetails.setUserId(ServicesUtil.isEmpty(object[0]) ? null : (String) object[0]);
+				userDetails.setEmailId(ServicesUtil.isEmpty(object[3]) ? null : (String) object[3]);
+				userDetails.setDisplayName(ServicesUtil.isEmpty(object[4]) ? null : (String) object[4]);
+				userDetailsMap.put(userDetails.getUserId(), userDetails);
+			}
+		}
+		usersMap = userDetailsMap;
+		return userDetailsMap;
+	}
+	
+	private void emptyUsersMap() {
+		usersMap = null;
 	}
 	
 	/**
@@ -628,7 +711,7 @@ public class AdminParse {
 	}
 	
 	public AdminParseResponse parseNewDetail() {
-		System.err.println("Start : " + System.currentTimeMillis());
+		System.err.println("Start : " + new Date());
 
 		List<TaskEventsDto> tasks = null;
 		List<ProcessEventsDto> processes = null;
@@ -644,11 +727,17 @@ public class AdminParse {
 		TaskOwnersDto owner = null;
 		ProjectProcessMapping prjPrcMap = null;
 		ProcessDetail processDetail = null;
+		
+		System.err.println("Fetch API Response Start : "+new Date());
 
 		JSONArray taskList = fetchInstances(
 				PMCConstant.REQUEST_URL_INST + "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes");
 		JSONArray processList = fetchInstances(PMCConstant.REQUEST_URL_INST + "workflow-instances?status=RUNNING&status=ERRONEOUS&status=CANCELED&status=COMPLETED");
 
+		System.err.println("Fetch API Response End : "+new Date());
+		
+		System.err.println("Parse Response Start : "+new Date());
+		
 		if (!ServicesUtil.isEmpty(taskList) && !ServicesUtil.isEmpty(processList) && taskList.length() > 0
 				&& processList.length() > 0) {
 			tasks = new ArrayList<TaskEventsDto>();
@@ -710,7 +799,7 @@ public class AdminParse {
 				task.setName(taskObject.optString("definitionId"));
 				task.setPriority(taskObject.optString("priority"));
 				task.setCompletedAt(ServicesUtil.isEmpty(taskObject.optString("completedAt")) ? null
-						: ServicesUtil.convertFromStringToDate(taskObject.optString("completedAt")));
+						: ServicesUtil.convertAdminFromStringToDate(taskObject.optString("completedAt")));
 
 				if(ServicesUtil.isEmpty(taskObject.optString("dueDate"))){
 					task.setCompletionDeadLine(new Date(task.getCreatedAt().getTime() + (1000 * 60 * 60 * 24 * 5)));
@@ -782,7 +871,179 @@ public class AdminParse {
 			}
 
 		}
-		System.err.println("End : " + System.currentTimeMillis());
+		System.err.println("Parse Response End : "+new Date());
+		System.err.println("End : " + new Date());
+		return new AdminParseResponse(tasks, processes, owners, null, 0, prjPrcMaps, processDetails);
+	}
+	
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws IOException {
+		
+		AdminParseResponse parseAPI = new AnnotationConfigApplicationContext(HibernateConfiguration.class).getBean(AdminParse.class).parseAPI();
+		
+		System.out.println(parseAPI.getProcessDetails());
+		System.out.println(parseAPI.getTasks().size());
+		System.out.println(parseAPI.getProcesses().size());
+		System.out.println(parseAPI.getOwners().size());
+		System.out.println(parseAPI.getProcessDetails().size());
+		
+//		JSONArray taskList = new AdminParse().fetchInstances(
+//				PMCConstant.REQUEST_URL_INST + "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes");
+//		JsonIterator taskIterator = JsonIterator.parse(taskList.toString());
+//		while(taskIterator.readArray()) { 
+//			Task parseTask = taskIterator.read(Task.class);
+//			System.out.println(parseTask.getAttributes());
+//		}
+		
+	}
+	
+	public AdminParseResponse parseAPI() throws IOException {
+		
+		List<TaskEventsDto> tasks = null;
+		TaskEventsDto task = null;
+		Task parseTask = null;
+
+		List<TaskOwnersDto> owners = null;
+		TaskOwnersDto owner = null;
+
+		List<ProcessEventsDto> processes = null;
+		ProcessEventsDto process = null;
+		Process parseProcess = null;
+		
+		List<ProjectProcessMapping> prjPrcMaps = null;
+		
+		List<ProcessDetail> processDetails = null;
+		ProcessDetail processDetail = null;
+		
+		System.err.println("[parseAPI]Fetch Start : "+new Date());
+		
+		JSONArray taskList = fetchInstances(
+				PMCConstant.REQUEST_URL_INST + "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes");
+		JSONArray processList = fetchInstances(PMCConstant.REQUEST_URL_INST + "workflow-instances?status=RUNNING&status=ERRONEOUS&status=CANCELED&status=COMPLETED");
+
+		System.err.println("[parseAPI]Fetch End : "+new Date());
+		
+		tasks = new ArrayList<TaskEventsDto>();
+		owners = new ArrayList<TaskOwnersDto>();
+		processes = new ArrayList<ProcessEventsDto>();
+		
+		processDetails = new ArrayList<ProcessDetail>();
+		
+		UserDetailsDto processorDetails = null;
+		UserDetailsDto ownerDetails = null;
+		
+		System.err.println("[parseAPI]Parse Start : "+new Date());
+
+		JsonIterator taskIterator = JsonIterator.parse(taskList.toString());
+		while(taskIterator.readArray()) {
+			task = new TaskEventsDto();
+			
+			parseTask = taskIterator.read(Task.class);
+			
+			task.setEventId(parseTask.getId());
+			task.setProcessId(parseTask.getWorkflowInstanceId());
+			task.setProcessName(parseTask.getWorkflowDefinitionId());
+			task.setCreatedAt(ServicesUtil.convertAdminFromStringToDate(parseTask.getCreatedAt()));
+			task.setDescription(parseTask.getDescription());
+			task.setCurrentProcessor(parseTask.getProcessor());
+			
+			if(!ServicesUtil.isEmpty(task.getCurrentProcessor())) {
+				processorDetails = getUserDetails(new UserDetailsDto(task.getCurrentProcessor(), null));
+				if(!ServicesUtil.isEmpty(processorDetails)) {
+					task.setCurrentProcessorDisplayName(processorDetails.getDisplayName());
+				}
+			}
+			
+			task.setSubject(parseTask.getSubject());
+			task.setStatus(parseTask.getStatus());
+			task.setName(parseTask.getDefinitionId());
+			task.setPriority(parseTask.getPriority());
+			task.setCompletedAt(ServicesUtil.isEmpty(parseTask.getCompletedAt()) ? null
+					: ServicesUtil.convertAdminFromStringToDate(parseTask.getCompletedAt()));
+
+			if(ServicesUtil.isEmpty(parseTask.getDueDate())){
+				task.setCompletionDeadLine(new Date(task.getCreatedAt().getTime() + (1000 * 60 * 60 * 24 * 5)));
+				task.setSlaDueDate(new Date(task.getCreatedAt().getTime() + (1000 * 60 * 60 * 24 * 5)));
+			} else {
+				task.setCompletionDeadLine(ServicesUtil.convertAdminFromStringToDate(parseTask.getDueDate()));
+				task.setSlaDueDate(ServicesUtil.convertAdminFromStringToDate(parseTask.getDueDate()));
+			}
+			
+			task.setOrigin("SCP");
+			tasks.add(task);
+			
+			if(!ServicesUtil.isEmpty(parseTask.getAttributes())) {
+				processDetail = new ProcessDetail();
+				for(Attribute attribute : parseTask.getAttributes()) {
+					setProcessDetail(processDetail, attribute);
+				}
+			}
+			
+			processDetails.add(processDetail);
+			
+			if (!ServicesUtil.isEmpty(task.getCurrentProcessor())) {
+				owner = new TaskOwnersDto();
+				owner.setEventId(task.getEventId());
+				owner.setTaskOwner(task.getCurrentProcessor());
+				owner.setIsProcessed(true);
+				ownerDetails = getUserDetails(new UserDetailsDto(owner.getTaskOwner(), null));
+				if(!ServicesUtil.isEmpty(ownerDetails)) {
+					owner.setOwnerEmail(ownerDetails.getEmailId());
+					owner.setTaskOwnerDisplayName(ownerDetails.getDisplayName());
+				}
+				owners.add(owner);
+			}
+
+			List<String> recepients = parseTask.getRecipientUsers();
+			List<String> recepientGroups = parseTask.getRecipientGroups();
+			for (String group : recepientGroups) {
+				recepients.addAll(getRecipientUserOfGroup((String) group));
+			}
+
+			for (String recepient : recepients) {
+				owner = new TaskOwnersDto();
+				owner.setEventId(task.getEventId());
+				owner.setTaskOwner(recepient);
+				owner.setIsProcessed(false);
+				ownerDetails = getUserDetails(new UserDetailsDto(owner.getTaskOwner(), null));
+				if(!ServicesUtil.isEmpty(ownerDetails)) {
+					owner.setOwnerEmail(ownerDetails.getEmailId());
+					owner.setTaskOwnerDisplayName(ownerDetails.getDisplayName());
+				}
+				owners.add(owner);
+			}
+		}
+		
+		JsonIterator processIterator = JsonIterator.parse(processList.toString());
+		while(processIterator.readArray()) {
+			process = new ProcessEventsDto();
+			parseProcess = processIterator.read(Process.class);
+			
+			process.setProcessId(parseProcess.getId());
+			
+			process.setName(parseProcess.getDefinitionId());
+			process.setSubject(parseProcess.getSubject());
+			process.setStatus(parseProcess.getStatus());
+
+			process.setRequestId(parseProcess.getBusinessKey());
+			process.setStartedAt(ServicesUtil.isEmpty(parseProcess.getStartedAt()) ? null
+					: ServicesUtil.convertAdminFromStringToDate(parseProcess.getStartedAt()));
+			process.setCompletedAt(ServicesUtil.isEmpty(parseProcess.getCompletedAt()) ? null
+					: ServicesUtil.convertAdminFromStringToDate(parseProcess.getCompletedAt()));
+			process.setStartedBy(parseProcess.getStartedBy());
+			UserDetailsDto uDetails = getUserDetails(new UserDetailsDto(process.getStartedBy(), null));
+			if(!ServicesUtil.isEmpty(uDetails)) {
+				process.setStartedByDisplayName(uDetails.getDisplayName());
+			}
+			
+			processes.add(process);
+		}
+		
+		System.err.println("[parseAPI]Parse End : "+new Date());
+		
+		emptyGroupsMapping();
+		emptyUsersMap();
+		
 		return new AdminParseResponse(tasks, processes, owners, null, 0, prjPrcMaps, processDetails);
 	}
 
@@ -837,6 +1098,42 @@ public class AdminParse {
 				break;
 			case "Country":
 				processContextDetail.setCountry(taskAttribute.optString("value"));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	
+	private void setProcessDetail(ProcessDetail processContextDetail, Attribute taskAttribute) {
+		if (!ServicesUtil.isEmpty(taskAttribute)) {
+			switch (taskAttribute.getId()) {
+			case "ProjectId":
+				processContextDetail.setProjectId(taskAttribute.getValue());
+				break;
+			case "MaterialId":
+				processContextDetail.setMaterialId(taskAttribute.getValue());
+				break;
+			case "ProjectDescription":
+				processContextDetail.setProjectDescription(taskAttribute.getValue());
+				break;
+			case "MaterialDescription":
+				processContextDetail.setMaterialDescription(taskAttribute.getValue());
+				break;
+			case "MaterialType":
+				processContextDetail.setMaterialType(taskAttribute.getValue());
+				break;
+			case "NodeId":
+				processContextDetail.setNodeId(taskAttribute.getValue());
+				break;
+			case "Key":
+				processContextDetail.setKey(taskAttribute.getValue());
+				break;
+			case "SubKey":
+				processContextDetail.setSubKey(taskAttribute.getValue());
+				break;
+			case "Country":
+				processContextDetail.setCountry(taskAttribute.getValue());
 				break;
 			default:
 				break;

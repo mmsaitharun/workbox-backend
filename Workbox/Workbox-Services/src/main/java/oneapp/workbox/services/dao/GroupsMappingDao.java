@@ -1,7 +1,9 @@
 package oneapp.workbox.services.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -15,6 +17,8 @@ import oneapp.workbox.services.util.ServicesUtil;
 @Repository
 @Transactional
 public class GroupsMappingDao {
+	
+	private Map<String, String> groupMappings;
 
 	@Autowired
 	private SessionFactory sessionFactory;
@@ -27,15 +31,41 @@ public class GroupsMappingDao {
 		this.getSession().saveOrUpdate(groupsMapping);
 	}
 	
-	public GroupsMapping getGroupsMapping(String groupName) {
-		return (GroupsMapping) this.getSession().load(GroupsMapping.class, groupName);
+	public String getGroupsMapping(String groupName) {
+		String groups = null;
+		if(ServicesUtil.isEmpty(groupMappings)) {
+			refreshAllGroupsMappings();
+			groups = getGroupsMapping(groupName);
+		} else {
+			groups = groupMappings.get(groupName);
+		}
+		return groups;
+	}
+	
+	public void emptyGroupsMapping() {
+		groupMappings = null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<GroupsMapping> getGroupMappingsResponse() {
+		return this.getSession().createCriteria(GroupsMapping.class).list();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, String> refreshAllGroupsMappings() {
+		Map<String, String> mappings = new HashMap<String, String>();
+		List<GroupsMapping> groupMappings = this.getSession().createCriteria(GroupsMapping.class).list();
+		for(GroupsMapping group : groupMappings) {
+			mappings.put(group.getGroupName(), group.getUsers());
+		}
+		this.groupMappings = mappings;
+		return mappings;
 	}
 	
 	public List<String> getUsersUnderGroup(String groupName) {
-		GroupsMapping groupsMapping = this.getGroupsMapping(groupName);
+		String users = this.getGroupsMapping(groupName);
 		List<String> groupUsers = null;
-		if(!ServicesUtil.isEmpty(groupsMapping)) {
-			String users = groupsMapping.getUsers();
+		if(!ServicesUtil.isEmpty(users)) {
 			groupUsers = new ArrayList<>();
 			if(!ServicesUtil.isEmpty(users) && users.contains(",")) {
 				String[] usersArray = users.split(",");

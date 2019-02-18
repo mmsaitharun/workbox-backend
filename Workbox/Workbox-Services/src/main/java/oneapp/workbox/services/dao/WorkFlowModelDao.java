@@ -1,6 +1,10 @@
 package oneapp.workbox.services.dao;
 
-import static oneapp.workbox.services.adapters.WorkFlowModelParser.*;
+import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_END_EVENT_CLASS;
+import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_SCRIPT_TASK_CLASS;
+import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_SERVICE_TASK_CLASS;
+import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_START_EVENT_CLASS;
+import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_USER_TASK_CLASS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +57,19 @@ public class WorkFlowModelDao {
 		return sessionFactory.getCurrentSession();
 	}
 
+	@SuppressWarnings("unchecked")
+	public void getProjectModel(String projectId) {
+		String getProcessDetailsQuery = ""
+				+ " SELECT PM.PROCESS_ID, PE.STARTED_AT, PE.NAME "
+				+ " FROM \"NPI_WORKBOX_USER\".\"PROJECT_PROCESS_MAP\" PM JOIN PROCESS_EVENTS PE ON PM.PROCESS_ID = PE.PROCESS_ID "
+				+ " WHERE PROJECT_ID = '"+projectId+"' "
+				+ " ORDER BY PE.STARTED_AT ASC ";
+		List<Object[]> resultList = getSession().createSQLQuery(getProcessDetailsQuery).list();
+		if(!ServicesUtil.isEmpty(resultList) && resultList.size() > 0) {
+			
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	public WorkFlowModelMaster getWorkFlowModel(String workFlowDefinitionId, String processId) {
 		WorkFlowModelMaster workflowModel = null;

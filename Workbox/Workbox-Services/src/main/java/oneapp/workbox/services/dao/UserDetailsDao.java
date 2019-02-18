@@ -53,6 +53,11 @@ public class UserDetailsDao {
 		return user;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public List<Object[]> getUserDetailResponse() {
+		return this.getSession().createSQLQuery("SELECT USER_ID, IS_DELETED, STATUS, USER_EMAIL, USER_NAME FROM \"WORKBOX_AGCO_TEMP\".\"APT_USER\"").list();
+	}
+	
 	public UserDetailsDto getUserDetails(com.sap.security.um.user.User user) {
 		UserDetailsDto userDetails = null;
 		String adminGroup = null;

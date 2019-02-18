@@ -94,4 +94,12 @@ public class UserDetailsDto {
 	public void setUserGroups(List<String> userGroups) {
 		this.userGroups = userGroups;
 	}
+
+	@Override
+	public String toString() {
+		return "UserDetailsDto [userId=" + userId + ", emailId=" + emailId + ", firstName=" + firstName + ", lastName="
+				+ lastName + ", mobileNo=" + mobileNo + ", displayName=" + displayName + ", isAdmin=" + isAdmin
+				+ ", userRoles=" + userRoles + ", userGroups=" + userGroups + "]";
+	}
+	
 }
