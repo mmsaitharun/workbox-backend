@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.transaction.Transactional;
 
@@ -24,7 +25,6 @@ import org.hibernate.criterion.Restrictions;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -36,10 +36,11 @@ import com.google.common.graph.MutableGraph;
 import oneapp.workbox.services.adapters.WorkFlowMasterModelGroup;
 import oneapp.workbox.services.adapters.WorkFlowModelMaster;
 import oneapp.workbox.services.adapters.WorkFlowModelParser;
-import oneapp.workbox.services.config.HibernateConfiguration;
 import oneapp.workbox.services.dto.ExecutionLog;
+import oneapp.workbox.services.dto.ProjectDetail;
 import oneapp.workbox.services.dto.RestResponse;
 import oneapp.workbox.services.dto.WorkFlowArtifactSequence;
+import oneapp.workbox.services.dto.WorkFlowDetailAttribute;
 import oneapp.workbox.services.entity.ProjectProcessRanking;
 import oneapp.workbox.services.entity.WorkFlowActivity;
 import oneapp.workbox.services.entity.WorkFlowEvent;
@@ -58,6 +59,9 @@ public class WorkFlowModelDao {
 
 	@Autowired
 	private SessionFactory sessionFactory;
+	
+	@Autowired
+	private ProjectProcessDao projectProcessDao;
 	
 	private Session getSession() {
 		return sessionFactory.getCurrentSession();
@@ -391,6 +395,8 @@ public class WorkFlowModelDao {
 
 	public WorkFlowModelMaster getMasterWorkFlowModel(String projectId) {
 		
+		List<WorkFlowActivity> activities = null;
+		List<WorkFlowArtifactSequence> networkSequence = null;
 		MultiValueMap<String, ProjectProcessDetail> processDetails = getProcessForProject(projectId);
 		MultiValueMap<Integer, String> processRanking = getProjectRanking();
 		WorkFlowModelMaster modelDetail = null;
@@ -442,9 +448,55 @@ public class WorkFlowModelDao {
 		
 		masterModelDetail.setGroupSequence(groupSequence);
 		masterModelDetail.setGroups(groups);
+		
+		if(!ServicesUtil.isEmpty(processRanking) && processRanking.size() >= 1 &&  !ServicesUtil.isEmpty(masterModelDetail)) {
+			List<ProjectDetail> projectDetails = projectProcessDao.getProjectDetails(projectId, null, null, null, false);
+			ProjectDetail projectDetail = null;
+			if(!ServicesUtil.isEmpty(projectDetails) && projectDetails.size() == 1)
+				projectDetail = projectDetails.get(0);
+			List<WorkFlowDetailAttribute> attributes = new ArrayList<WorkFlowDetailAttribute>();
+			{
+				attributes.add(new WorkFlowDetailAttribute(projectDetail.getProjectDescription(), "Project Description"));
+				attributes.add(new WorkFlowDetailAttribute(projectDetail.getCreatedAtInString(), "Project Created At"));
+				attributes.add(new WorkFlowDetailAttribute(projectDetail.getReason(), "Reason"));
+				attributes.add(new WorkFlowDetailAttribute(projectDetail.getRegionCode(), "Region Code"));
+				attributes.add(new WorkFlowDetailAttribute(projectDetail.getUserCreated(), "Created By"));
+			}
+			WorkFlowActivity activity = new WorkFlowActivity();
+			activity.setId(projectId);
+			activity.setActivityShape("Box");
+			activity.setAttributes(attributes);
+			
+			
+			activities = masterModelDetail.getActivities();
+			networkSequence = masterModelDetail.getNetworkSequence();
+			List<String> initialProcess = processRanking.get(1);
+			
+			if(!ServicesUtil.isEmpty(activities))
+				activities.add(activity);
+
+			for(WorkFlowActivity inActivity : activities) {
+				if(!ServicesUtil.isEmpty(inActivity) && WorkFlowModelParser.WFS_START_EVENT_CLASS.equals(inActivity.getArtifactClassDefinition()) && initialProcess.contains(getDefName(inActivity.getWorkFlowDefId()))) {
+					networkSequence.add(new WorkFlowArtifactSequence(activity.getId(), inActivity.getId(), null));
+				}
+			}
+		}
+		
+		if(!ServicesUtil.isEmpty(networkSequence))
+			masterModelDetail.setNetworkSequence(networkSequence);
+		if(!ServicesUtil.isEmpty(activities))
+			masterModelDetail.setActivities(activities);
+		
 		return masterModelDetail;
 	}
 	
+	private static String getDefName(String workFlowDefId) {
+		if(workFlowDefId.contains("||")) {
+			return workFlowDefId.split(Pattern.quote("||"))[1];
+		}
+		return workFlowDefId;
+	}
+
 	private MultiValueMap<String, WorkFlowMasterModelGroup> getMVGroupMap(List<WorkFlowMasterModelGroup> groups) {
 		MultiValueMap<String, WorkFlowMasterModelGroup> mvGroupMap = null;
 		if(!ServicesUtil.isEmpty(groups) && groups.size() > 0) {
@@ -544,11 +596,18 @@ public class WorkFlowModelDao {
 	}
 
 	public static void main(String[] args) {
-		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(HibernateConfiguration.class);
-		WorkFlowModelDao workFlowModelDao = applicationContext.getBean(WorkFlowModelDao.class);
+//		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(HibernateConfiguration.class);
+//		WorkFlowModelDao workFlowModelDao = applicationContext.getBean(WorkFlowModelDao.class);
 //		workFlowModelDao.insertProjectRankings();
-		System.out.println(workFlowModelDao.getProjectRanking());
-		applicationContext.close();
+//		System.out.println(workFlowModelDao.getProjectRanking());
+//		applicationContext.close();
+		
+		
+		String str = "989f7994-1ff4-11e9-9bbc-00163e817f7b||detailed_scoping_wf";
+		System.out.println(getDefName(str));
+		
+		System.out.println(Pattern.quote("||"));
+		
 	}
 	
 }
