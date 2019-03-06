@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import oneapp.workbox.services.adapters.AdminParse;
-import oneapp.workbox.services.adapters.AdminParse.AdminParseResponse;
+import oneapp.workbox.services.adapters.AdminParseResponse;
 import oneapp.workbox.services.dao.ProcessEventsDao;
 import oneapp.workbox.services.dao.TaskEventsDao;
 import oneapp.workbox.services.dao.TaskOwnersDao;
@@ -143,10 +143,10 @@ public class WorkboxRest {
 		return "Success";
 	}
 
-	@RequestMapping(value = "/updateData", method = RequestMethod.GET)
-	public void updateData() {
-		eventsUpdate.updateEvents();
-	}
+//	@RequestMapping(value = "/updateData", method = RequestMethod.GET)
+//	public void updateData() {
+//		eventsUpdate.updateEvents();
+//	}
 
 	@RequestMapping(value = "/getStatistics", method = RequestMethod.GET)
 	public Statistics getStatistics() {

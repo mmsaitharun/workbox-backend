@@ -2,3 +2,9 @@
 **/.settings
 **/.project
 **/.classpath
+/.metadata/
+/.recommenders/
+Servers/*
+WorkflowReader/*
+Workbox-Modules/*
+TestingProject/*

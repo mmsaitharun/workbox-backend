@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdbstudio version="1.2">
+<tree>
+<sapsystem name="I4T:LOCALHOST:00:SINGLEDB:NPI_WORKBOX_USER"/>
+</tree>
+<sapsystems>
+<sapsystem cloudAccount="af91a028a" cloudDedicatedDb="i4t" cloudHost="eu1.hana.ondemand.com" cloudSystemName="af91a028a-i4t" cloudUser="p1942289352" databasetype="SINGLEDB" hostname="localhost" instancenumber="0" open="false" secure="false" secure_xs="true" ssl="false" systemname="I4T" tunneled="tunneled" username="NPI_WORKBOX_USER" xs_host="i4taf91a028a.hana.ondemand.com:443">
+<hostrole hostname="localhost" publicname="localhost" role="CLIENT" sqlport="30015"/>
+<hostrole hostname="vsa2094364.od.sap.biz" publicname="10.120.164.240" role="MASTER" sqlport="30015"/>
+<sapcontrol state="DISABLED"/>
+</sapsystem>
+</sapsystems>
+</hdbstudio>

@@ -15,14 +15,17 @@ public class WorkFlowModelMaster {
 	}
 
 	public WorkFlowModelMaster(List<WorkFlowEvent> events, List<WorkFlowActivity> activities,
-			List<WorkFlowSequenceFlow> sequences, List<WorkFlowExclusiveGateway> exclusiveGateways,
-			List<WorkFlowArtifactSequence> networkSequence) {
+			List<WorkFlowSequenceFlow> sequences, List<WorkFlowExclusiveGateway> exclusiveGateways, 
+			List<WorkFlowArtifactSequence> groupSequence, List<WorkFlowArtifactSequence> networkSequence, 
+			List<WorkFlowMasterModelGroup> groups) {
 		super();
 		this.events = events;
 		this.activities = activities;
 		this.sequences = sequences;
 		this.exclusiveGateways = exclusiveGateways;
 		this.networkSequence = networkSequence;
+		this.groupSequence = groupSequence;
+		this.groups = groups;
 	}
 
 	private List<WorkFlowEvent> events;
@@ -31,7 +34,10 @@ public class WorkFlowModelMaster {
 	private List<WorkFlowExclusiveGateway> exclusiveGateways;
 
 	private List<WorkFlowArtifactSequence> networkSequence;
-
+	private List<WorkFlowArtifactSequence> groupSequence;
+	
+	private List<WorkFlowMasterModelGroup> groups;
+	
 	public List<WorkFlowEvent> getEvents() {
 		return events;
 	}
@@ -72,10 +78,27 @@ public class WorkFlowModelMaster {
 		this.networkSequence = networkSequence;
 	}
 
+	public List<WorkFlowMasterModelGroup> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<WorkFlowMasterModelGroup> groups) {
+		this.groups = groups;
+	}
+
+	public List<WorkFlowArtifactSequence> getGroupSequence() {
+		return groupSequence;
+	}
+
+	public void setGroupSequence(List<WorkFlowArtifactSequence> groupSequence) {
+		this.groupSequence = groupSequence;
+	}
+
 	@Override
 	public String toString() {
 		return "WorkFlowModelMaster [events=" + events + ", activities=" + activities + ", sequences=" + sequences
-				+ ", exclusiveGateways=" + exclusiveGateways + ", networkSequence=" + networkSequence + "]";
+				+ ", exclusiveGateways=" + exclusiveGateways + ", networkSequence=" + networkSequence
+				+ ", groupSequence=" + groupSequence + ", groups=" + groups + "]";
 	}
 
 }

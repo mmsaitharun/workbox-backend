@@ -48,8 +48,8 @@ public class RestUtil {
 	 * @return RestResponse with returnObject, responseCode, httpResponse
 	 */
 	public static RestResponse callRestService(String requestURL, String samlHeaderKey, String entity, String method,
-			String contentType, Boolean isSaml, String xCsrfToken, String userId, String password, String authHeader, String accessToken,
-			String tokenType) {
+			String contentType, Boolean isSaml, String xCsrfToken, String userId, String password, String authHeader,
+			String accessToken, String tokenType) {
 
 		RestResponse restResponse = null;
 		CloseableHttpClient httpClient = HttpClientBuilder.create().build();
@@ -80,14 +80,16 @@ public class RestUtil {
 					if (!ServicesUtil.isEmpty(userId) && !ServicesUtil.isEmpty(password)) {
 						httpRequestBase.addHeader("Authorization", ServicesUtil.getBasicAuth(userId, password));
 					}
-					
-					if(!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId) && ServicesUtil.isEmpty(password)) {
+
+					if (!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId)
+							&& ServicesUtil.isEmpty(password)) {
 						httpRequestBase.addHeader("Authorization", authHeader);
 					}
 
 					if (!ServicesUtil.isEmpty(accessToken) && !ServicesUtil.isEmpty(tokenType)
 							&& ServicesUtil.isEmpty(userId)) {
-						httpRequestBase.addHeader("Authorization", ServicesUtil.getAuthorization(accessToken, tokenType));
+						httpRequestBase.addHeader("Authorization",
+								ServicesUtil.getAuthorization(accessToken, tokenType));
 					}
 					httpResponse = httpClient.execute(httpRequestBase);
 					Header[] headers = httpResponse.getAllHeaders();
@@ -110,7 +112,7 @@ public class RestUtil {
 						input = new StringEntity(entity);
 						input.setContentType(contentType);
 					} catch (UnsupportedEncodingException e) {
-						logger.error("Input UnsupportedEncodingException : "+e.getMessage());
+						logger.error("Input UnsupportedEncodingException : " + e.getMessage());
 					}
 					((HttpPost) httpRequestBase).setEntity(input);
 				}
@@ -121,7 +123,7 @@ public class RestUtil {
 						input = new StringEntity(entity);
 						input.setContentType(contentType);
 					} catch (UnsupportedEncodingException e) {
-						logger.error("Input UnsupportedEncodingException : "+e.getMessage());
+						logger.error("Input UnsupportedEncodingException : " + e.getMessage());
 					}
 					((HttpPatch) httpRequestBase).setEntity(input);
 				}
@@ -135,8 +137,8 @@ public class RestUtil {
 			if (!ServicesUtil.isEmpty(userId) && !ServicesUtil.isEmpty(password)) {
 				httpRequestBase.addHeader("Authorization", ServicesUtil.getBasicAuth(userId, password));
 			}
-			
-			if(!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId) && ServicesUtil.isEmpty(password)) {
+
+			if (!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId) && ServicesUtil.isEmpty(password)) {
 				httpRequestBase.addHeader("Authorization", authHeader);
 			}
 
@@ -146,7 +148,7 @@ public class RestUtil {
 			}
 			try {
 				httpResponse = httpClient.execute(httpRequestBase);
-				if(!ServicesUtil.isEmpty(httpResponse) && !ServicesUtil.isEmpty(httpResponse.getEntity())) {
+				if (!ServicesUtil.isEmpty(httpResponse) && !ServicesUtil.isEmpty(httpResponse.getEntity())) {
 					json = EntityUtils.toString(httpResponse.getEntity());
 					try {
 						if (!ServicesUtil.isEmpty(json)) {
@@ -169,6 +171,130 @@ public class RestUtil {
 				restResponse.setHttpResponse(httpResponse);
 				restResponse.setResponseCode(httpResponse.getStatusLine().getStatusCode());
 				httpClient.close();
+			} catch (IOException e) {
+				logger.error("IOException : " + e);
+			}
+		}
+		return restResponse;
+	}
+
+	public static RestResponse invokeRestService(String requestURL, String samlHeaderKey, String entity, String method,
+			String contentType, Boolean isSaml, String xCsrfToken, String userId, String password, String authHeader,
+			String accessToken, String tokenType) {
+
+		CloseableHttpClient httpClient = null;
+		HttpRequestBase httpRequestBase = null;
+		
+		RestResponse restResponse = null;
+		httpClient = HttpClientBuilder.create()
+//				.setConnectionManagerShared(true)
+//				.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+				.build();
+		HttpResponse httpResponse = null;
+		StringEntity input = null;
+		String json = null;
+
+		AuthenticationHeader appToAppSSOHeader = null;
+		if (requestURL != null) {
+			restResponse = new RestResponse();
+			if (isSaml) {
+				if (ServicesUtil.isEmpty(appToAppSSOHeader)) {
+					appToAppSSOHeader = refreshAppToAppSSOHeader(requestURL);
+				}
+			}
+
+			try {
+				if (xCsrfToken != null && xCsrfToken.equalsIgnoreCase("fetch")) {
+					httpRequestBase = new HttpGet(requestURL);
+					httpRequestBase.setHeader("x-csrf-token", xCsrfToken);
+					if (appToAppSSOHeader != null) {
+						httpRequestBase.addHeader(appToAppSSOHeader.getName(), appToAppSSOHeader.getValue());
+					}
+					if (!ServicesUtil.isEmpty(userId) && !ServicesUtil.isEmpty(password)) {
+						httpRequestBase.addHeader("Authorization", ServicesUtil.getBasicAuth(userId, password));
+					}
+
+					if (!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId)
+							&& ServicesUtil.isEmpty(password)) {
+						httpRequestBase.addHeader("Authorization", authHeader);
+					}
+
+					if (!ServicesUtil.isEmpty(accessToken) && !ServicesUtil.isEmpty(tokenType)
+							&& ServicesUtil.isEmpty(userId)) {
+						httpRequestBase.addHeader("Authorization",
+								ServicesUtil.getAuthorization(accessToken, tokenType));
+					}
+					httpResponse = httpClient.execute(httpRequestBase);
+					Header[] headers = httpResponse.getAllHeaders();
+					for (Header header : headers) {
+						if (header.getName().equalsIgnoreCase("x-csrf-token")) {
+							xCsrfToken = header.getValue();
+						}
+					}
+				}
+			} catch (IOException e) {
+				System.err.println("Exception : " + e.getMessage());
+			}
+
+			if (method.equalsIgnoreCase(PMCConstant.HTTP_METHOD_GET)) {
+				httpRequestBase = new HttpGet(requestURL);
+			} else if (method.equalsIgnoreCase(PMCConstant.HTTP_METHOD_POST)) {
+				httpRequestBase = new HttpPost(requestURL);
+				if (!ServicesUtil.isEmpty(entity)) {
+					try {
+						input = new StringEntity(entity);
+						input.setContentType(contentType);
+					} catch (UnsupportedEncodingException e) {
+						logger.error("Input UnsupportedEncodingException : " + e.getMessage());
+					}
+					((HttpPost) httpRequestBase).setEntity(input);
+				}
+			} else if (method.equalsIgnoreCase(PMCConstant.HTTP_METHOD_PATCH)) {
+				httpRequestBase = new HttpPatch(requestURL);
+				if (!ServicesUtil.isEmpty(entity)) {
+					try {
+						input = new StringEntity(entity);
+						input.setContentType(contentType);
+					} catch (UnsupportedEncodingException e) {
+						logger.error("Input UnsupportedEncodingException : " + e.getMessage());
+					}
+					((HttpPatch) httpRequestBase).setEntity(input);
+				}
+			}
+			if (appToAppSSOHeader != null) {
+				httpRequestBase.addHeader(appToAppSSOHeader.getName(), appToAppSSOHeader.getValue());
+			}
+			if (!ServicesUtil.isEmpty(xCsrfToken) && !xCsrfToken.equalsIgnoreCase("fetch"))
+				httpRequestBase.addHeader("x-csrf-token", xCsrfToken);
+			httpRequestBase.addHeader("accept", contentType);
+			if (!ServicesUtil.isEmpty(userId) && !ServicesUtil.isEmpty(password)) {
+				httpRequestBase.addHeader("Authorization", ServicesUtil.getBasicAuth(userId, password));
+			}
+
+			if (!ServicesUtil.isEmpty(authHeader) && ServicesUtil.isEmpty(userId) && ServicesUtil.isEmpty(password)) {
+				httpRequestBase.addHeader("Authorization", authHeader);
+			}
+
+			if (!ServicesUtil.isEmpty(accessToken) && !ServicesUtil.isEmpty(tokenType)
+					&& ServicesUtil.isEmpty(userId)) {
+				httpRequestBase.addHeader("Authorization", ServicesUtil.getAuthorization(accessToken, tokenType));
+			}
+			
+			try {
+				httpResponse = httpClient.execute(httpRequestBase);
+				if (!ServicesUtil.isEmpty(httpResponse) && !ServicesUtil.isEmpty(httpResponse.getEntity())) {
+					json = EntityUtils.toString(httpResponse.getEntity());
+					try {
+						if (!ServicesUtil.isEmpty(json)) {
+							restResponse.setResponseObject(json);
+						}
+					} catch (JSONException e) {
+						logger.error("JSONException : " + e + "JSON Object : " + json);
+					}
+				}
+				restResponse.setHttpResponse(httpResponse);
+				restResponse.setResponseCode(httpResponse.getStatusLine().getStatusCode());
+//				httpClient.close();
 			} catch (IOException e) {
 				logger.error("IOException : " + e);
 			}

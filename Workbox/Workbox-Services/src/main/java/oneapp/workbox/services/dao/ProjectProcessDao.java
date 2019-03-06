@@ -61,7 +61,12 @@ public class ProjectProcessDao {
 		if (!ServicesUtil.isEmpty(processDetails) && processDetails.size() > 0) {
 			session = this.getSession();
 			for (ProcessDetail processDetail : processDetails) {
-				session.saveOrUpdate(processDetail);
+				try {
+					if(!ServicesUtil.isEmpty(processDetail) && !ServicesUtil.isEmpty(processDetail.getProjectId()))
+						session.saveOrUpdate(processDetail);
+				} catch (Exception ex) {
+					System.err.println("Object Already being persisted : "+ex.getMessage());
+				}
 			}
 		}
 	}

@@ -28,6 +28,17 @@ public class WorkFlowModelController {
 		return wFmodelDao.getWorkFlowModel(workFlowDefId, processId);
 	}
 	
+	@RequestMapping(value = "/saveWorkFlowModelRanking", method = RequestMethod.GET)
+	public String saveWorkFlowModelRanking() {
+		wFmodelDao.insertProjectRankings();
+		return "Success";
+	}
+	
+	@RequestMapping(value = "/getWorkFlowMasterModel", method = RequestMethod.GET)
+	public WorkFlowModelMaster getMasterWorkFlowModel(@RequestParam String projectId) {
+		return wFmodelDao.getMasterWorkFlowModel(projectId);
+	}
+	
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(HibernateConfiguration.class);
 		WorkFlowModelController myController = applicationContext.getBean(WorkFlowModelController.class);

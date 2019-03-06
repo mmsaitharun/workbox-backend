@@ -8,6 +8,7 @@ import static oneapp.workbox.services.adapters.WorkFlowModelParser.WFS_USER_TASK
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import java.util.Set;
 import javax.transaction.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
@@ -22,6 +24,7 @@ import org.hibernate.criterion.Restrictions;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -30,11 +33,14 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
+import oneapp.workbox.services.adapters.WorkFlowMasterModelGroup;
 import oneapp.workbox.services.adapters.WorkFlowModelMaster;
 import oneapp.workbox.services.adapters.WorkFlowModelParser;
+import oneapp.workbox.services.config.HibernateConfiguration;
 import oneapp.workbox.services.dto.ExecutionLog;
 import oneapp.workbox.services.dto.RestResponse;
 import oneapp.workbox.services.dto.WorkFlowArtifactSequence;
+import oneapp.workbox.services.entity.ProjectProcessRanking;
 import oneapp.workbox.services.entity.WorkFlowActivity;
 import oneapp.workbox.services.entity.WorkFlowEvent;
 import oneapp.workbox.services.entity.WorkFlowExclusiveGateway;
@@ -52,7 +58,7 @@ public class WorkFlowModelDao {
 
 	@Autowired
 	private SessionFactory sessionFactory;
-
+	
 	private Session getSession() {
 		return sessionFactory.getCurrentSession();
 	}
@@ -130,24 +136,34 @@ public class WorkFlowModelDao {
 			networkSequence = new ArrayList<WorkFlowArtifactSequence>();
 			for (EndpointPair<Object> edge : graph.edges()) {
 				artifactSeq = new WorkFlowArtifactSequence(edge.source().toString(), edge.target().toString(), null);
+				if(!ServicesUtil.isEmpty(processId)) {
+					artifactSeq.setFrom(processId + "||" + artifactSeq.getFrom());
+					artifactSeq.setTo(processId + "||" + artifactSeq.getTo());
+				}
 				networkSequence.add(artifactSeq);
 			}
 		}
 		workflowModel.setNetworkSequence(networkSequence);
 
 		// Forming Status of WF
-		MultiValueMap<String, ExecutionLog> executionLogs = getExecutionLogs(processId);
-		for (WorkFlowActivity activity : workflowModel.getActivities()) {
-			List<ExecutionLog> activityStatus = executionLogs.get(activity.getArtifactId());
-			if (!ServicesUtil.isEmpty(activityStatus) && activityStatus.size() > 0) {
-				setActivityStatus(activity, activityStatus);
-			}
-			if (!ServicesUtil.isEmpty(activity) && !ServicesUtil.isEmpty(activity.getArtifactClassDefinition())
-					&& (activity.getArtifactClassDefinition().equals(WFS_START_EVENT_CLASS)
-							|| activity.getArtifactClassDefinition().equals(WFS_END_EVENT_CLASS))) {
-				List<ExecutionLog> eventStatus = executionLogs.get("workFlowEvent");
-				if (!ServicesUtil.isEmpty(eventStatus) && eventStatus.size() > 0) {
-					setActivityStatus(activity, eventStatus);
+		if (!ServicesUtil.isEmpty(processId)) {
+			MultiValueMap<String, ExecutionLog> executionLogs = getExecutionLogs(processId);
+			for (WorkFlowActivity activity : workflowModel.getActivities()) {
+
+				activity.setId(processId + "||" + activity.getId());
+				activity.setWorkFlowDefId(processId + "||" + activity.getWorkFlowDefId());
+
+				List<ExecutionLog> activityStatus = executionLogs.get(activity.getArtifactId());
+				if (!ServicesUtil.isEmpty(activityStatus) && activityStatus.size() > 0) {
+					setActivityStatus(activity, activityStatus);
+				}
+				if (!ServicesUtil.isEmpty(activity) && !ServicesUtil.isEmpty(activity.getArtifactClassDefinition())
+						&& (activity.getArtifactClassDefinition().equals(WFS_START_EVENT_CLASS)
+								|| activity.getArtifactClassDefinition().equals(WFS_END_EVENT_CLASS))) {
+					List<ExecutionLog> eventStatus = executionLogs.get("workFlowEvent");
+					if (!ServicesUtil.isEmpty(eventStatus) && eventStatus.size() > 0) {
+						setActivityStatus(activity, eventStatus);
+					}
 				}
 			}
 		}
@@ -323,5 +339,216 @@ public class WorkFlowModelDao {
 			}
 		}
 	}
+	
+	class ProjectProcessDetail {
 
+		public ProjectProcessDetail() {
+			super();
+		}
+
+		public ProjectProcessDetail(String processId, String processName, Date startedAt) {
+			super();
+			this.processId = processId;
+			this.processName = processName;
+			this.startedAt = startedAt;
+		}
+
+		private String processId;
+		private String processName;
+		private Date startedAt;
+
+		public String getProcessId() {
+			return processId;
+		}
+
+		public void setProcessId(String processId) {
+			this.processId = processId;
+		}
+
+		public String getProcessName() {
+			return processName;
+		}
+
+		public void setProcessName(String processName) {
+			this.processName = processName;
+		}
+
+		public Date getStartedAt() {
+			return startedAt;
+		}
+
+		public void setStartedAt(Date startedAt) {
+			this.startedAt = startedAt;
+		}
+
+		@Override
+		public String toString() {
+			return "ProjectProcessDetail [processId=" + processId + ", processName=" + processName + ", startedAt="
+					+ startedAt + "]";
+		}
+
+	}
+
+	public WorkFlowModelMaster getMasterWorkFlowModel(String projectId) {
+		
+		MultiValueMap<String, ProjectProcessDetail> processDetails = getProcessForProject(projectId);
+		MultiValueMap<Integer, String> processRanking = getProjectRanking();
+		WorkFlowModelMaster modelDetail = null;
+		WorkFlowModelMaster masterModelDetail = null;
+		List<String> processes = null;
+		List<WorkFlowMasterModelGroup> groups = null;
+		List<ProjectProcessDetail> prcDet = null;
+		List<WorkFlowArtifactSequence> groupSequence = null;
+		WorkFlowMasterModelGroup wfModelGroup = null;
+		MultiValueMap<String,WorkFlowMasterModelGroup> mvGroupMap = null;
+		if(!ServicesUtil.isEmpty(processRanking) && !ServicesUtil.isEmpty(processRanking.keySet())) {
+			groups = new ArrayList<WorkFlowMasterModelGroup>();
+			for(Integer key : processRanking.keySet()) {
+				processes = processRanking.get(key);
+				for(String process : processes) {
+					prcDet = processDetails.get(process);
+					if(!ServicesUtil.isEmpty(prcDet) && prcDet.size() > 0) {
+						for(ProjectProcessDetail detail : prcDet) {
+							modelDetail = getWorkFlowModel(process, detail.getProcessId());
+							if(ServicesUtil.isEmpty(masterModelDetail)) {
+								masterModelDetail = modelDetail;
+							} else {
+								mergeModelMasterDetail(masterModelDetail, modelDetail);
+							}
+							wfModelGroup = new WorkFlowMasterModelGroup(detail.getProcessId() + "||" + process, process, null);
+							groups.add(wfModelGroup);
+						}
+					} else {
+						modelDetail = getWorkFlowModel(process, null);
+						mergeModelMasterDetail(masterModelDetail, modelDetail);
+						groups.add(new WorkFlowMasterModelGroup(process, process, null));
+					}
+				}
+			}
+		}
+		
+		List<String> prevProcesses = null;
+		List<String> nextProcesses = null;
+		groupSequence = new ArrayList<WorkFlowArtifactSequence>();
+		mvGroupMap = getMVGroupMap(groups);
+		for(Integer key : processRanking.keySet()) {
+			if(key != processRanking.size()) {
+				prevProcesses = processRanking.get(key);
+				nextProcesses = processRanking.get(key+1);
+				
+				groupSequence.addAll(formGroupSequence(prevProcesses, nextProcesses, mvGroupMap));
+			}
+		}
+		
+		masterModelDetail.setGroupSequence(groupSequence);
+		masterModelDetail.setGroups(groups);
+		return masterModelDetail;
+	}
+	
+	private MultiValueMap<String, WorkFlowMasterModelGroup> getMVGroupMap(List<WorkFlowMasterModelGroup> groups) {
+		MultiValueMap<String, WorkFlowMasterModelGroup> mvGroupMap = null;
+		if(!ServicesUtil.isEmpty(groups) && groups.size() > 0) {
+			mvGroupMap = new LinkedMultiValueMap<String, WorkFlowMasterModelGroup>();
+			for(WorkFlowMasterModelGroup group : groups) {
+				mvGroupMap.add(group.getTitle(), group);
+			}
+		}
+		return mvGroupMap;
+	}
+
+	private Set<WorkFlowArtifactSequence> formGroupSequence(List<String> prevProcesses, List<String> nextProcesses, 
+			MultiValueMap<String, WorkFlowMasterModelGroup> groups) {
+		Set<WorkFlowArtifactSequence> gSequence = null;
+		if(!ServicesUtil.isEmpty(prevProcesses) && prevProcesses.size() > 0) {
+			gSequence = new HashSet<WorkFlowArtifactSequence>();
+			
+			if(!ServicesUtil.isEmpty(prevProcesses)) { 
+				for(String currentProcess : prevProcesses) {
+					List<WorkFlowMasterModelGroup> curGroups = groups.get(currentProcess);
+					if(!ServicesUtil.isEmpty(nextProcesses)) {
+						for(String nextProcess : nextProcesses) {
+							List<WorkFlowMasterModelGroup> nxtGroups = groups.get(nextProcess);
+							for(WorkFlowMasterModelGroup curGroup : curGroups) {
+								for(WorkFlowMasterModelGroup nxtGroup : nxtGroups) {
+									gSequence.add(new WorkFlowArtifactSequence(curGroup.getKey(), nxtGroup.getKey(), null));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return gSequence;
+	}
+
+	private void mergeModelMasterDetail(WorkFlowModelMaster masterModelDetail, WorkFlowModelMaster modelDetail) {
+		masterModelDetail.getActivities().addAll(modelDetail.getActivities());
+		masterModelDetail.getNetworkSequence().addAll(modelDetail.getNetworkSequence());
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	private MultiValueMap<String, ProjectProcessDetail> getProcessForProject(String projectId) {
+		MultiValueMap<String, ProjectProcessDetail> prjDetails = null;
+//		List<ProjectProcessDetail> prjPrcDetails = null;
+		ProjectProcessDetail prjPrcDetail = null;
+		if(!ServicesUtil.isEmpty(projectId)) {
+			String query = " SELECT PM.PROCESS_ID, PE.NAME, PE.STARTED_AT "
+					+ " FROM \"NPI_WORKBOX_USER\".\"PROJECT_PROCESS_MAP\" PM JOIN PROCESS_EVENTS PE ON PM.PROCESS_ID = PE.PROCESS_ID "
+					+ " WHERE PROJECT_ID = '"+projectId+"' "
+					+ " ORDER BY PE.STARTED_AT ASC";
+			SQLQuery sqlQuery = getSession().createSQLQuery(query);
+			List<Object[]> resultList = sqlQuery.list();
+			if(!ServicesUtil.isEmpty(resultList) && resultList.size() > 0) {
+//				prjPrcDetails = new ArrayList<ProjectProcessDetail>();
+				prjDetails = new LinkedMultiValueMap<String, ProjectProcessDetail>();
+				for(Object[] object : resultList) {
+					prjPrcDetail = new ProjectProcessDetail();
+					prjPrcDetail.setProcessId(ServicesUtil.asString(object[0]));
+					prjPrcDetail.setProcessName(ServicesUtil.asString(object[1]));
+					prjPrcDetail.setStartedAt(ServicesUtil.resultAsDate(object[2]));
+
+					prjDetails.add(prjPrcDetail.getProcessName(), prjPrcDetail);
+//					prjPrcDetails.add(prjPrcDetail);
+				}
+			}
+		}
+		return prjDetails;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private MultiValueMap<Integer, String> getProjectRanking() {
+		MultiValueMap<Integer, String> rankings = null;
+		List<ProjectProcessRanking> result = getSession().createCriteria(ProjectProcessRanking.class).list();
+		if(!ServicesUtil.isEmpty(result) && result.size() > 0) {
+			rankings = new LinkedMultiValueMap<Integer, String>();
+			for(ProjectProcessRanking rank : result) {
+				rankings.add(rank.getRank(), rank.getProcessName());
+			}
+		}
+		return rankings;
+	}
+	
+	public void insertProjectRankings() {
+		ProjectProcessRanking ranking = null;
+		ranking = new ProjectProcessRanking("NPI", "detailed_scoping_wf", 1);
+		this.getSession().saveOrUpdate(ranking);
+		ranking = new ProjectProcessRanking("NPI", "material_definition_wf", 2);
+		this.getSession().saveOrUpdate(ranking);
+		ranking = new ProjectProcessRanking("NPI", "salesorg_definition_wf", 3);
+		this.getSession().saveOrUpdate(ranking);
+		ranking = new ProjectProcessRanking("NPI", "plant_definition_wf", 3);
+		this.getSession().saveOrUpdate(ranking);
+		ranking = new ProjectProcessRanking("NPI", "warehouse_definition_wf", 3);
+		this.getSession().saveOrUpdate(ranking);
+	}
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(HibernateConfiguration.class);
+		WorkFlowModelDao workFlowModelDao = applicationContext.getBean(WorkFlowModelDao.class);
+//		workFlowModelDao.insertProjectRankings();
+		System.out.println(workFlowModelDao.getProjectRanking());
+		applicationContext.close();
+	}
+	
 }

@@ -1,6 +1,6 @@
 package oneapp.workbox.services.adapters;
 
-public class Process {
+public class Process implements Event {
 
 	public Process() {
 		super();

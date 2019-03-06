@@ -2,7 +2,7 @@ package oneapp.workbox.services.adapters;
 
 import java.util.List;
 
-public class Task {
+public class Task implements Event {
 
 	public Task() {
 		super();

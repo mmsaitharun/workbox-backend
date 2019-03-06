@@ -271,4 +271,143 @@ public class ProcessDetail {
 				+ processStatus + ", processName=" + processName + ", processSubject=" + processSubject + "]";
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((country == null) ? 0 : country.hashCode());
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		result = prime * result + ((leadCategory == null) ? 0 : leadCategory.hashCode());
+		result = prime * result + ((leadCountry == null) ? 0 : leadCountry.hashCode());
+		result = prime * result + ((materialDescription == null) ? 0 : materialDescription.hashCode());
+		result = prime * result + ((materialId == null) ? 0 : materialId.hashCode());
+		result = prime * result + ((materialType == null) ? 0 : materialType.hashCode());
+		result = prime * result + ((materialUniqueId == null) ? 0 : materialUniqueId.hashCode());
+		result = prime * result + ((nodeId == null) ? 0 : nodeId.hashCode());
+		result = prime * result + ((processId == null) ? 0 : processId.hashCode());
+		result = prime * result + ((processName == null) ? 0 : processName.hashCode());
+		result = prime * result + ((processStatus == null) ? 0 : processStatus.hashCode());
+		result = prime * result + ((processSubject == null) ? 0 : processSubject.hashCode());
+		result = prime * result + ((projectDescription == null) ? 0 : projectDescription.hashCode());
+		result = prime * result + ((projectId == null) ? 0 : projectId.hashCode());
+		result = prime * result + ((region == null) ? 0 : region.hashCode());
+		result = prime * result + ((requestId == null) ? 0 : requestId.hashCode());
+		result = prime * result + ((requestedBy == null) ? 0 : requestedBy.hashCode());
+		result = prime * result + ((requiredTaskCsv == null) ? 0 : requiredTaskCsv.hashCode());
+		result = prime * result + ((subKey == null) ? 0 : subKey.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ProcessDetail other = (ProcessDetail) obj;
+		if (country == null) {
+			if (other.country != null)
+				return false;
+		} else if (!country.equals(other.country))
+			return false;
+		if (key == null) {
+			if (other.key != null)
+				return false;
+		} else if (!key.equals(other.key))
+			return false;
+		if (leadCategory == null) {
+			if (other.leadCategory != null)
+				return false;
+		} else if (!leadCategory.equals(other.leadCategory))
+			return false;
+		if (leadCountry == null) {
+			if (other.leadCountry != null)
+				return false;
+		} else if (!leadCountry.equals(other.leadCountry))
+			return false;
+		if (materialDescription == null) {
+			if (other.materialDescription != null)
+				return false;
+		} else if (!materialDescription.equals(other.materialDescription))
+			return false;
+		if (materialId == null) {
+			if (other.materialId != null)
+				return false;
+		} else if (!materialId.equals(other.materialId))
+			return false;
+		if (materialType == null) {
+			if (other.materialType != null)
+				return false;
+		} else if (!materialType.equals(other.materialType))
+			return false;
+		if (materialUniqueId == null) {
+			if (other.materialUniqueId != null)
+				return false;
+		} else if (!materialUniqueId.equals(other.materialUniqueId))
+			return false;
+		if (nodeId == null) {
+			if (other.nodeId != null)
+				return false;
+		} else if (!nodeId.equals(other.nodeId))
+			return false;
+		if (processId == null) {
+			if (other.processId != null)
+				return false;
+		} else if (!processId.equals(other.processId))
+			return false;
+		if (processName == null) {
+			if (other.processName != null)
+				return false;
+		} else if (!processName.equals(other.processName))
+			return false;
+		if (processStatus == null) {
+			if (other.processStatus != null)
+				return false;
+		} else if (!processStatus.equals(other.processStatus))
+			return false;
+		if (processSubject == null) {
+			if (other.processSubject != null)
+				return false;
+		} else if (!processSubject.equals(other.processSubject))
+			return false;
+		if (projectDescription == null) {
+			if (other.projectDescription != null)
+				return false;
+		} else if (!projectDescription.equals(other.projectDescription))
+			return false;
+		if (projectId == null) {
+			if (other.projectId != null)
+				return false;
+		} else if (!projectId.equals(other.projectId))
+			return false;
+		if (region == null) {
+			if (other.region != null)
+				return false;
+		} else if (!region.equals(other.region))
+			return false;
+		if (requestId == null) {
+			if (other.requestId != null)
+				return false;
+		} else if (!requestId.equals(other.requestId))
+			return false;
+		if (requestedBy == null) {
+			if (other.requestedBy != null)
+				return false;
+		} else if (!requestedBy.equals(other.requestedBy))
+			return false;
+		if (requiredTaskCsv == null) {
+			if (other.requiredTaskCsv != null)
+				return false;
+		} else if (!requiredTaskCsv.equals(other.requiredTaskCsv))
+			return false;
+		if (subKey == null) {
+			if (other.subKey != null)
+				return false;
+		} else if (!subKey.equals(other.subKey))
+			return false;
+		return true;
+	}
+
 }

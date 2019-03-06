@@ -38,6 +38,7 @@ public class WorkFlowModelParser {
 	public static WorkFlowModelMaster parseWorkflowModel(String workFlowDefinitionId) {
 		WorkFlowModelMaster workflowModelMaster = null;
 		WorkFlowArtifact artifact = null;
+		WorkFlowEvent eventArtifact = null;
 
 		List<WorkFlowEvent> events;
 		List<WorkFlowActivity> activities;
@@ -60,16 +61,31 @@ public class WorkFlowModelParser {
 				JSONObject jsonArtifact = jsonContents.optJSONObject(key);
 				if (!ServicesUtil.isEmpty(jsonArtifact) && jsonArtifact instanceof org.json.JSONObject) {
 					artifact = getWorkFlowArtifact(jsonArtifact, key, workFlowDefinitionId);
+					eventArtifact = new WorkFlowEvent();
+					WorkFlowActivity activity = null;
 					if (!ServicesUtil.isEmpty(artifact) && !ServicesUtil.isEmpty(artifact.getId())) {
 						if (artifact instanceof WorkFlowEvent) {
 							events.add((WorkFlowEvent) artifact);
-						} else if (artifact instanceof WorkFlowActivity) {
-							activities.add((WorkFlowActivity) artifact);
+						}
+						else if (artifact instanceof WorkFlowActivity) {
+							activity = (WorkFlowActivity) artifact;
+							activities.add(activity);
+							if(activity.getArtifactClassDefinition().equals(WFS_START_EVENT_CLASS) || activity.getArtifactClassDefinition().equals(WFS_END_EVENT_CLASS)) {
+								eventArtifact.setId(activity.getId());
+								eventArtifact.setArtifactId(activity.getArtifactId());
+								eventArtifact.setArtifactClassDefinition(artifact.getArtifactClassDefinition());
+								eventArtifact.setArtifactName(artifact.getArtifactName());
+								eventArtifact.setWorkFlowDefId(artifact.getWorkFlowDefId());
+								eventArtifact.setArtifactIcon(artifact.getArtifactIcon());
+								events.add(eventArtifact);
+							}
 						} else if (artifact instanceof WorkFlowSequenceFlow) {
 							sequences.add((WorkFlowSequenceFlow) artifact);
 						} else if (artifact instanceof WorkFlowExclusiveGateway) {
 							exclusiveGateways.add((WorkFlowExclusiveGateway) artifact);
 						}
+						
+						 
 					}
 				}
 			}
@@ -116,11 +132,12 @@ public class WorkFlowModelParser {
 
 	private static WorkFlowArtifact getExclusiveGateway(JSONObject jsonArtifact, String id, String workFlowDefId) {
 		WorkFlowExclusiveGateway exclusiveGateway = new WorkFlowExclusiveGateway();
-		exclusiveGateway.setId(id);
+		exclusiveGateway.setId(workFlowDefId+"||"+id);
 		exclusiveGateway.setArtifactId(jsonArtifact.optString("id"));
 		exclusiveGateway.setArtifactClassDefinition(jsonArtifact.optString("classDefinition"));
 		exclusiveGateway.setArtifactName(jsonArtifact.optString("name"));
-		exclusiveGateway.setGatewayDefault(jsonArtifact.optString("default"));
+		String defaultArtifact = jsonArtifact.optString("default");
+		exclusiveGateway.setGatewayDefault(ServicesUtil.isEmpty(defaultArtifact) ? null : workFlowDefId+"||"+defaultArtifact);
 		exclusiveGateway.setWorkFlowDefId(workFlowDefId);
 		return exclusiveGateway;
 	}
@@ -138,19 +155,19 @@ public class WorkFlowModelParser {
 
 	private static WorkFlowArtifact getSequenceFlow(JSONObject jsonArtifact, String id, String workFlowDefId) {
 		WorkFlowSequenceFlow sequence = new WorkFlowSequenceFlow();
-		sequence.setId(id);
+		sequence.setId(workFlowDefId+"||"+id);
 		sequence.setArtifactId(jsonArtifact.optString("id"));
 		sequence.setArtifactClassDefinition(jsonArtifact.optString("classDefinition"));
 		sequence.setArtifactName(jsonArtifact.optString("name"));
-		sequence.setSourceRef(jsonArtifact.optString("sourceRef"));
-		sequence.setTargetRef(jsonArtifact.optString("targetRef"));
+		sequence.setSourceRef(workFlowDefId+"||"+jsonArtifact.optString("sourceRef"));
+		sequence.setTargetRef(workFlowDefId+"||"+jsonArtifact.optString("targetRef"));
 		sequence.setWorkFlowDefId(workFlowDefId);
 		return sequence;
 	}
 
 	private static WorkFlowArtifact getUserTask(JSONObject jsonArtifact, String id, String workFlowDefId) {
 		WorkFlowActivity activity = new WorkFlowActivity();
-		activity.setId(id);
+		activity.setId(workFlowDefId+"||"+id);
 		activity.setArtifactId(jsonArtifact.optString("id"));
 		activity.setArtifactClassDefinition(jsonArtifact.optString("classDefinition"));
 		activity.setArtifactName(jsonArtifact.optString("name"));

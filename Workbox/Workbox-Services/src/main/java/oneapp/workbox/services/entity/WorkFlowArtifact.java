@@ -54,6 +54,9 @@ public class WorkFlowArtifact implements Serializable {
 	
 	@Transient
 	private WorkFlowTaskStatus activityStatus;
+	
+	@Transient
+	private String activityShape;
 
 	public String getId() {
 		return id;
@@ -111,11 +114,20 @@ public class WorkFlowArtifact implements Serializable {
 		this.activityStatus = activityStatus;
 	}
 
+	public String getActivityShape() {
+		return activityShape;
+	}
+
+	public void setActivityShape(String activityShape) {
+		this.activityShape = activityShape;
+	}
+
 	@Override
 	public String toString() {
 		return "WorkFlowArtifact [id=" + id + ", artifactName=" + artifactName + ", artifactClassDefinition="
 				+ artifactClassDefinition + ", artifactId=" + artifactId + ", workFlowDefId=" + workFlowDefId
-				+ ", artifactIcon=" + artifactIcon + "]";
+				+ ", artifactIcon=" + artifactIcon + ", activityStatus=" + activityStatus + ", activityShape="
+				+ activityShape + "]";
 	}
 
 }

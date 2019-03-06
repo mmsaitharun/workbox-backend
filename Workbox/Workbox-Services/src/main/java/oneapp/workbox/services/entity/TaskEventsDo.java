@@ -128,7 +128,6 @@ public class TaskEventsDo implements Serializable {
 	// this.taskEventsDoPK = taskEventsDoPK;
 	// }
 
-	
 	public String getStatus() {
 		return status;
 	}

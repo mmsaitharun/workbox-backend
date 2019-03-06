@@ -52,4 +52,35 @@ public class ProjectProcessMapping implements Serializable {
 		return "ProjectProcessMapping [processId=" + processId + ", projectId=" + projectId + "]";
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((processId == null) ? 0 : processId.hashCode());
+		result = prime * result + ((projectId == null) ? 0 : projectId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ProjectProcessMapping other = (ProjectProcessMapping) obj;
+		if (processId == null) {
+			if (other.processId != null)
+				return false;
+		} else if (!processId.equals(other.processId))
+			return false;
+		if (projectId == null) {
+			if (other.projectId != null)
+				return false;
+		} else if (!projectId.equals(other.projectId))
+			return false;
+		return true;
+	}
+
 }

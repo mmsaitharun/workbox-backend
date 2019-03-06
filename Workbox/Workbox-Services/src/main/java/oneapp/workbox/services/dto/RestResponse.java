@@ -1,5 +1,7 @@
 package oneapp.workbox.services.dto;
 
+import java.net.HttpURLConnection;
+
 import org.apache.http.HttpResponse;
 
 public class RestResponse {
@@ -7,6 +9,7 @@ public class RestResponse {
 	private Object responseObject;
 	private int responseCode;
 	private HttpResponse httpResponse;
+	private HttpURLConnection urlConnection;
 
 	public Object getResponseObject() {
 		return responseObject;
@@ -32,10 +35,18 @@ public class RestResponse {
 		this.httpResponse = httpResponse;
 	}
 
+	public HttpURLConnection getUrlConnection() {
+		return urlConnection;
+	}
+
+	public void setUrlConnection(HttpURLConnection urlConnection) {
+		this.urlConnection = urlConnection;
+	}
+
 	@Override
 	public String toString() {
 		return "RestResponse [responseObject=" + responseObject + ", responseCode=" + responseCode + ", httpResponse="
-				+ httpResponse + "]";
+				+ httpResponse + ", urlConnection=" + urlConnection + "]";
 	}
 
 }

@@ -14,10 +14,10 @@
 	<context:component-scan base-package="oneapp.workbox" />
 	<mvc:annotation-driven />
 	<task:scheduled-tasks scheduler="taskEventsScheduler">
-		<task:scheduled ref="eventsScheduler" method="updateEvents"
-			fixed-delay="6000" />
-		<task:scheduled ref="eventsScheduler" method="updateCompleteEvents"
-			fixed-delay="6000" />
+		<task:scheduled ref="eventsScheduler" method="updateWorkFlowEvents"
+			fixed-delay="3000" />
+		<!-- <task:scheduled ref="eventsScheduler" method="updateCompleteEvents"
+			fixed-delay="6000" /> -->
 	</task:scheduled-tasks>
 	<task:scheduler id="taskEventsScheduler" />
 </beans>

@@ -59,8 +59,9 @@ public class HibernateConfiguration {
 		properties.put("hibernate.hbm2ddl.auto", environment.getProperty("hibernate.hbm2ddl.auto"));
 		properties.put("hibernate.globally_quoted_identifiers", "true");
 
-//		properties.put("hibernate.generate_statistics", true);
+		properties.put("hibernate.generate_statistics", true);
 		properties.put("hibernate.jdbc.batch_size", environment.getRequiredProperty("hibernate.batch_size"));
+		
 		return properties;
 	}
 

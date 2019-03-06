@@ -53,7 +53,7 @@ public class ProcessEventsDo implements Serializable {
 
 	@Column(name = "STARTED_BY_DISP", length = 100)
 	private String startedByDisplayName;
-
+	
 	public String getProcessId() {
 		return processId;
 	}

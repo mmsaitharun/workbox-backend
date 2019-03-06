@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>oneapp.workbox</groupId>
@@ -22,6 +23,8 @@
 		<sap.tomcat.sdk.version>3.73.18.1</sap.tomcat.sdk.version>
 		<sap.hana.cloud.db.version>2.3.56</sap.hana.cloud.db.version>
 		<jsoniter.version>0.9.23</jsoniter.version>
+		<junit.version>4.12</junit.version>
+		<mockito.test.version>1.10.19</mockito.test.version>
 
 		<java.version>1.8</java.version>
 	</properties>
@@ -67,6 +70,20 @@
 			<groupId>com.jsoniter</groupId>
 			<artifactId>jsoniter</artifactId>
 			<version>${jsoniter.version}</version>
+		</dependency>
+
+		<!-- Test Dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${mockito.test.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 	</dependencies>

@@ -56,7 +56,7 @@ public class TaskOwnersDo implements Serializable {
 
 	@Column(name = "TASK_OWNER_EMAIL", length = 60)
 	private String ownerEmail;
-
+	
 	public String getOwnerEmail() {
 		return ownerEmail;
 	}
