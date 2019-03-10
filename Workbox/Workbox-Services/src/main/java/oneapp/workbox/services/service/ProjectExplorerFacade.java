@@ -107,7 +107,7 @@ public class ProjectExplorerFacade implements ProjectExplorerFacadeLocal {
 
 			RestResponse restResponse = RestUtil.callRestService(
 					PMCConstant.REQUEST_URL_INST + "workflow-instances/" + processId + "/context", null, null, PMCConstant.HTTP_METHOD_GET,
-					PMCConstant.APPLICATION_JSON, false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null);
+					PMCConstant.APPLICATION_JSON, true, null, null, null, null, null, null);
 
 			if (!ServicesUtil.isEmpty(restResponse) && !ServicesUtil.isEmpty(restResponse.getResponseCode())
 					&& restResponse.getResponseCode() == 200) {

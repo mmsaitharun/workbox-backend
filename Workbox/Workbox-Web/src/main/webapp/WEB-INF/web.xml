@@ -24,7 +24,7 @@
 	</servlet-mapping>
 	
 	<login-config>
-		<auth-method>BASIC</auth-method>
+		<auth-method>FORM</auth-method>
 	</login-config>
 	<security-constraint>
 		<web-resource-collection>

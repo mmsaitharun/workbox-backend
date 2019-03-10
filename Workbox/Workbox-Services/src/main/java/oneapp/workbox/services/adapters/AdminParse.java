@@ -11,17 +11,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.jsoniter.JsonIterator;
-import com.jsoniter.spi.TypeLiteral;
 
 import oneapp.workbox.services.dao.CustomAttributeDao;
 import oneapp.workbox.services.dao.GroupsMappingDao;
@@ -309,7 +309,7 @@ public class AdminParse {
 		RestResponse restResponse = null;
 		requestUrl += "&$inlinecount=allpages";
 		restResponse = RestUtil.callRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-				"application/json", false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null,
+				"application/json", true, null, null, null, null, null,
 				null);
 		ret = new Object[2];
 		ret[0] = (JSONArray) restResponse.getResponseObject();
@@ -338,7 +338,7 @@ public class AdminParse {
 		if (!ServicesUtil.isEmpty(requestUrl)) {
 			requestUrl += "&$top=1000&$inlinecount=allpages";
 			restResponse = RestUtil.callRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-					"application/json", false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null,
+					"application/json", true, null, null, null, null, null,
 					null);
 		}
 		responseObject = restResponse.getResponseObject();
@@ -354,7 +354,7 @@ public class AdminParse {
 			for (int k = 1; k < taskInstancesCount / skip; k++) {
 				requestUrl += "&$skip=" + (skip * k);
 				restResponse = RestUtil.callRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-						"application/json", true, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
+						"application/json", true, null, null, null, null,
 						null, null);
 				responseObject = restResponse.getResponseObject();
 				jsonArraySkip = ServicesUtil.isEmpty(responseObject) ? null : (JSONArray) responseObject;
@@ -362,94 +362,6 @@ public class AdminParse {
 			}
 		}
 		return jsonArray;
-	}
-
-	@SuppressWarnings("rawtypes")
-	private List getInstances(String requestUrl, Class clazz) {
-
-		int taskInstancesCount = -1;
-		Object responseObject = null;
-		HttpResponse httpResponse = null;
-		RestResponse restResponse = null;
-		List<Task> taskArray = null;
-		List<Task> taskArraySkip = null;
-
-		List<Process> processArray = null;
-		List<Process> processArraySkip = null;
-		
-		int taskArraySize = 0;
-		int processArraySize = 0;
-		
-		if (!ServicesUtil.isEmpty(requestUrl)) {
-			requestUrl += "&$top=1000&$inlinecount=allpages";
-			restResponse = RestUtil.invokeRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-					"application/json", false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null,
-					null);
-		}
-		responseObject = restResponse.getResponseObject();
-		httpResponse = restResponse.getHttpResponse();
-		if(!ServicesUtil.isEmpty(httpResponse)) {
-			for (Header header : httpResponse.getAllHeaders()) {
-				if (header.getName().equalsIgnoreCase("X-Total-Count")) {
-					taskInstancesCount = Integer.parseInt(header.getValue());
-				}
-			}
-		} else if(!ServicesUtil.isEmpty(restResponse.getUrlConnection()) && restResponse.getResponseCode() == HttpURLConnection.HTTP_OK) {
-			taskInstancesCount = Integer.parseInt(restResponse.getUrlConnection().getHeaderField("X-Total-Count"));
-		}
-		if (clazz.equals(Task.class)) {
-			taskArray = ServicesUtil.isEmpty(responseObject) ? null
-					: JsonIterator.deserialize(responseObject.toString(), new TypeLiteral<List<Task>>() {
-					});
-			if(!ServicesUtil.isEmpty(taskArray))
-				taskArraySize = taskArray.size();
-			if (taskInstancesCount > taskArraySize) {
-				int skip = 1000;
-				for (int k = 1; k < taskInstancesCount / skip; k++) {
-					requestUrl += "&$skip=" + (skip * k);
-					restResponse = RestUtil.invokeRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-							"application/json", true, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
-							null, null);
-					responseObject = restResponse.getResponseObject();
-					taskArraySkip = ServicesUtil.isEmpty(responseObject) ? null
-							: JsonIterator.deserialize(responseObject.toString(), new TypeLiteral<List<Task>>() {
-							});
-					if (!ServicesUtil.isEmpty(taskArray) && taskArraySize > 0) {
-						taskArray.addAll(taskArraySkip);
-					} else {
-						taskArray = taskArraySkip;
-					}
-				}
-			}
-			return taskArray;
-		} else if (clazz.equals(Process.class)) {
-			processArray = ServicesUtil.isEmpty(responseObject) ? null
-					: JsonIterator.deserialize(responseObject.toString(), new TypeLiteral<List<Process>>() {
-					});
-			if(!ServicesUtil.isEmpty(processArray))
-				processArraySize = processArray.size();
-			if (taskInstancesCount > processArraySize) {
-				int skip = 1000;
-				for (int k = 1; k < taskInstancesCount / skip; k++) {
-					requestUrl += "&$skip=" + (skip * k);
-					restResponse = RestUtil.invokeRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-							"application/json", true, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
-							null, null);
-					responseObject = restResponse.getResponseObject();
-					processArraySkip = ServicesUtil.isEmpty(responseObject) ? null
-							: JsonIterator.deserialize(responseObject.toString(), new TypeLiteral<List<Process>>() {
-							});
-					if (!ServicesUtil.isEmpty(processArray) && processArraySize > 0) {
-						processArray.addAll(processArraySkip);
-					} else {
-						processArray = processArraySkip;
-					}
-				}
-			}
-			return processArray;
-		}
-		return null;
-
 	}
 
 	private static JSONArray mergeJsonArray(JSONArray jsonArray, JSONArray jsonArraySkip) {
@@ -557,7 +469,7 @@ public class AdminParse {
 			processContextDetail = new ProcessDetail();
 			String processInstanceURL = PMCConstant.REQUEST_URL_INST + "workflow-instances/" + processId + "/context";
 			Object responseObject = RestUtil.callRestService(processInstanceURL, PMCConstant.SAML_HEADER_KEY_TC, null,
-					"GET", "application/json", false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
+					"GET", "application/json", true, null, null, null, null,
 					null, null).getResponseObject();
 			JSONObject jsonObject = ServicesUtil.isEmpty(responseObject) ? null : (JSONObject) responseObject;
 			if (!ServicesUtil.isEmpty(jsonObject) && jsonObject.toString().contains("projectId")) {
@@ -703,8 +615,7 @@ public class AdminParse {
 		Map<String, String> contextData = null;
 		RestResponse restResponse = RestUtil.callRestService(
 				PMCConstant.REQUEST_URL_INST + "task-instances/" + taskEventId + "/context", null, null,
-				PMCConstant.HTTP_METHOD_GET, PMCConstant.APPLICATION_JSON, false, null, PMCConstant.WF_BASIC_USER,
-				PMCConstant.WF_BASIC_PASS, null, null, null);
+				PMCConstant.HTTP_METHOD_GET, PMCConstant.APPLICATION_JSON, true, null, null, null, null, null, null);
 		if (!ServicesUtil.isEmpty(restResponse) && !ServicesUtil.isEmpty(restResponse.getResponseObject())) {
 			if (restResponse.getResponseObject().toString().startsWith("{")) {
 				contextData = new HashMap<String, String>();
@@ -904,33 +815,31 @@ public class AdminParse {
 		return new AdminParseResponse(tasks, processes, owners, null, 0, prjPrcMaps, processDetails);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws IOException {
 
-		// AdminParseResponse parseAPI = new
-		// AnnotationConfigApplicationContext(HibernateConfiguration.class).getBean(AdminParse.class).parseAPI();
-		//
-		// System.out.println(parseAPI.getProcessDetails());
-		// System.out.println(parseAPI.getTasks().size());
-		// System.out.println(parseAPI.getProcesses().size());
-		// System.out.println(parseAPI.getOwners().size());
-		// System.out.println(parseAPI.getProcessDetails().size());
-
-		List<Task> taskList = new AdminParse().getInstances(
-				PMCConstant.REQUEST_URL_INST
-						+ "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes",
-				Task.class);
-		List<Process> processList = new AdminParse().getInstances(
-				PMCConstant.REQUEST_URL_INST
-						+ "workflow-instances?status=RUNNING&status=ERRONEOUS&status=CANCELED&status=COMPLETED",
-				Process.class);
-
+		List<Task> taskList = null;
+		List<Process> processList = null;
+		
+		ExecutorService executorService = Executors.newFixedThreadPool(2);
+		Future<List<Task>> futureTasks = executorService.submit(new TaskDownloader());
+		Future<List<Process>> futureProcess = executorService.submit(new ProcessDownloader());
+		
+		try {
+			taskList = futureTasks.get();
+			processList = futureProcess.get();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		} finally {
+			if(!ServicesUtil.isEmpty(executorService) && !executorService.isShutdown()) {
+				executorService.shutdown();
+			}
+		}
+		
 		System.out.println(taskList.get(0));
 		System.out.println(processList.get(0));
-
+		
 	}
 
-	@SuppressWarnings("unchecked")
 	public AdminParseResponseObject parseAPI() {
 
 		List<TaskEventsDo> tasks = null;
@@ -952,15 +861,24 @@ public class AdminParse {
 
 		System.err.println("[parseAPI]Fetch Start : " + System.currentTimeMillis());
 
-		List<Task> taskList = getInstances(
-				PMCConstant.REQUEST_URL_INST
-						+ "task-instances?status=READY&status=RESERVED&status=CANCELED&status=COMPLETED&$expand=attributes",
-				Task.class);
-		List<Process> processList = getInstances(
-				PMCConstant.REQUEST_URL_INST
-						+ "workflow-instances?status=RUNNING&status=ERRONEOUS&status=CANCELED&status=COMPLETED",
-				Process.class);
-
+		List<Task> taskList = null;
+		List<Process> processList = null;
+		
+		ExecutorService executorService = Executors.newFixedThreadPool(2);
+		Future<List<Task>> futureTasks = executorService.submit(new TaskDownloader());
+		Future<List<Process>> futureProcess = executorService.submit(new ProcessDownloader());
+		
+		try {
+			taskList = futureTasks.get();
+			processList = futureProcess.get();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		} finally {
+			if(!ServicesUtil.isEmpty(executorService) && !executorService.isShutdown()) {
+				executorService.shutdown();
+			}
+		}
+		
 		System.err.println("[parseAPI]Fetch End : " + System.currentTimeMillis());
 
 		tasks = new ArrayList<TaskEventsDo>();

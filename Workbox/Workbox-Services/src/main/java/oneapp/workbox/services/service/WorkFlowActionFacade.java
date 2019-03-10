@@ -124,8 +124,8 @@ public class WorkFlowActionFacade implements WorkFlowActionFacadeLocal {
 				String releaseTask = PMCConstant.REQUEST_BASE_URL_TC + "/Release?SAP__Origin=%27NA%27&InstanceID='" + instanceId
 						+ "'";
 				// String token = getScrfToken(RELEASE_TASK);
-				RestResponse restResponse = RestUtil.callRestService(releaseTask, PMCConstant.SAML_HEADER_KEY_TC, null, "POST", "application/json", false,
-						"Fetch", PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null);
+				RestResponse restResponse = RestUtil.callRestService(releaseTask, PMCConstant.SAML_HEADER_KEY_TC, null, "POST", "application/json", true,
+						"Fetch", null, null, null, null, null);
 				if(!ServicesUtil.isEmpty(restResponse) && !ServicesUtil.isEmpty(restResponse.getResponseCode())) {
 					if(restResponse.getResponseCode() == 201) {
 //						releaseInstance(instanceId, userId);
@@ -150,8 +150,8 @@ public class WorkFlowActionFacade implements WorkFlowActionFacadeLocal {
 				String claimTask = PMCConstant.REQUEST_BASE_URL_TC + "/Claim?SAP__Origin=%27NA%27&InstanceID='" + instanceId
 						+ "'";
 				// String token = getScrfToken(RELEASE_TASK);
-				RestResponse restResponse = RestUtil.callRestService(claimTask, PMCConstant.SAML_HEADER_KEY_TC, null, "POST", "application/json", false,
-						"Fetch", PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null);
+				RestResponse restResponse = RestUtil.callRestService(claimTask, PMCConstant.SAML_HEADER_KEY_TC, null, "POST", "application/json", true,
+						"Fetch", null, null, null, null, null);
 				if(!ServicesUtil.isEmpty(restResponse) && !ServicesUtil.isEmpty(restResponse.getResponseCode())) {
 					if(restResponse.getResponseCode() == 201) {
 //						claimInstance(instanceId, userId);
@@ -219,8 +219,8 @@ public class WorkFlowActionFacade implements WorkFlowActionFacadeLocal {
 				// String token = getScrfToken(url);
 				ActionRequestDto dto = new ActionRequestDto("COMPLETED", new ActionRequestContextDto("false", comment));
 				JSONObject entity = new JSONObject(dto);
-				Object responseObject = RestUtil.callRestService(url, PMCConstant.SAML_HEADER_KEY_TI, entity.toString(), "PATCH", "application/json", false,
-						"Fetch", PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null).getResponseObject();
+				Object responseObject = RestUtil.callRestService(url, PMCConstant.SAML_HEADER_KEY_TI, entity.toString(), "PATCH", "application/json", true,
+						"Fetch", null, null, null, null, null).getResponseObject();
 				JSONObject obj = ServicesUtil.isEmpty(responseObject) ? null : (JSONObject) responseObject;
 			}
 			response.setStatus("Success");
@@ -243,8 +243,8 @@ public class WorkFlowActionFacade implements WorkFlowActionFacadeLocal {
 				// token = getScrfToken(url);
 				ActionRequestDto dto = new ActionRequestDto("COMPLETED", new ActionRequestContextDto("true", comment));
 				JSONObject entity = new JSONObject(dto);
-				Object responseObject = RestUtil.callRestService(url, PMCConstant.SAML_HEADER_KEY_TI, entity.toString(), "PATCH", "application/json", false,
-						"Fetch", PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null).getResponseObject();
+				Object responseObject = RestUtil.callRestService(url, PMCConstant.SAML_HEADER_KEY_TI, entity.toString(), "PATCH", "application/json", true,
+						"Fetch", null, null, null, null, null).getResponseObject();
 				JSONObject obj = ServicesUtil.isEmpty(responseObject) ? null : (JSONObject)responseObject;
 			}
 			response.setStatus(PMCConstant.SUCCESS);

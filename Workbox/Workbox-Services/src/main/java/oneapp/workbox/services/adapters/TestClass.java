@@ -39,7 +39,7 @@ public class TestClass {
 		if (!ServicesUtil.isEmpty(requestUrl)) {
 			requestUrl += "&$top=1000&$inlinecount=allpages";
 			restResponse = RestUtil.invokeRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-					"application/json", false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null,
+					"application/json", true, null, null, null, null, null,
 					null);
 		}
 		responseObject = restResponse.getResponseObject();
@@ -55,7 +55,7 @@ public class TestClass {
 			for (int k = 1; k < taskInstancesCount / skip; k++) {
 				requestUrl += "&$skip=" + (skip * k);
 				restResponse = RestUtil.invokeRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null, "GET",
-						"application/json", true, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
+						"application/json", true, null, null, null, null,
 						null, null);
 				responseObject = restResponse.getResponseObject();
 				jsonArraySkip = ServicesUtil.isEmpty(responseObject) ? null : JsonIterator.deserialize(responseObject.toString(), new TypeLiteral<List<Event>>(){});

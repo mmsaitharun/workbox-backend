@@ -30,7 +30,7 @@
 		<persistence strategy="localTempSwap" />
 	</cache>
 
-	<cache name="samlHeaderKeyTI" maxEntriesLocalHeap="0"
+	<cache name="oAuthTokenCache" maxEntriesLocalHeap="0"
 		maxEntriesLocalDisk="0" eternal="true" diskSpoolBufferSizeMB="30"
 		memoryStoreEvictionPolicy="LFU" transactionalMode="off">
 		<persistence strategy="localTempSwap" />

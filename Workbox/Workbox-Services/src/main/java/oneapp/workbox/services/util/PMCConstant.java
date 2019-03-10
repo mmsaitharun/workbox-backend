@@ -199,6 +199,8 @@ public interface PMCConstant {
 
 	String ADMIN_GROUP_CONFIG_REF = "1";
 	
-	String WF_BASIC_USER = "P1099205";
-	String WF_BASIC_PASS = "Ranjit30";
+//	String WF_BASIC_USER = "P1099205";
+//	String WF_BASIC_PASS = "Ranjit30";
+	
+	String APPLICATION_OAUTH_TOKEN = "applicationOAuthToken";
 }

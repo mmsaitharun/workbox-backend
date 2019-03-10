@@ -331,7 +331,7 @@ public class WorkboxDaoMuchCleanUp {
 		List<CustomAttributeValue> customValues = null;
 		CustomAttributeValue customValue = null;
 		
-		RestResponse restResponse = RestUtil.callRestService(baseUrl + taskId + relativeUrl, null, null, PMCConstant.HTTP_METHOD_GET, PMCConstant.APPLICATION_JSON, false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null, null, null);
+		RestResponse restResponse = RestUtil.callRestService(baseUrl + taskId + relativeUrl, null, null, PMCConstant.HTTP_METHOD_GET, PMCConstant.APPLICATION_JSON, true, null, null, null, null, null, null);
 		if(restResponse.getResponseCode() >= 200 && restResponse.getResponseCode() < 400) {
 			customValues = new ArrayList<>();
 			Object attributeJson = restResponse.getResponseObject();

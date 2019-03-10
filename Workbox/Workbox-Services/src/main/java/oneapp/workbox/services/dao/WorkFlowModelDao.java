@@ -39,6 +39,7 @@ import oneapp.workbox.services.adapters.WorkFlowModelParser;
 import oneapp.workbox.services.dto.ExecutionLog;
 import oneapp.workbox.services.dto.ProjectDetail;
 import oneapp.workbox.services.dto.RestResponse;
+import oneapp.workbox.services.dto.TokenDetailsDto;
 import oneapp.workbox.services.dto.WorkFlowArtifactSequence;
 import oneapp.workbox.services.dto.WorkFlowDetailAttribute;
 import oneapp.workbox.services.entity.ProjectProcessRanking;
@@ -46,6 +47,7 @@ import oneapp.workbox.services.entity.WorkFlowActivity;
 import oneapp.workbox.services.entity.WorkFlowEvent;
 import oneapp.workbox.services.entity.WorkFlowExclusiveGateway;
 import oneapp.workbox.services.entity.WorkFlowSequenceFlow;
+import oneapp.workbox.services.util.OAuth;
 import oneapp.workbox.services.util.PMCConstant;
 import oneapp.workbox.services.util.RestUtil;
 import oneapp.workbox.services.util.ServicesUtil;
@@ -217,12 +219,13 @@ public class WorkFlowModelDao {
 	private MultiValueMap<String, ExecutionLog> getExecutionLogs(String processId) {
 		String url = "https://bpmworkflowruntimea2d6007ea-x5qv5zg6ns.hana.ondemand.com/workflow-service/rest/v1/workflow-instances/"
 				+ processId + "/execution-logs";
+		TokenDetailsDto tokenDetails = OAuth.getToken();
 		JSONObject executionLog = null;
 		MultiValueMap<String, ExecutionLog> exLogs = null;
 		ExecutionLog exLog = null;
 		RestResponse restResponse = RestUtil.callRestService(url, null, null, PMCConstant.HTTP_METHOD_GET,
-				PMCConstant.APPLICATION_JSON, false, null, PMCConstant.WF_BASIC_USER, PMCConstant.WF_BASIC_PASS, null,
-				null, null);
+				PMCConstant.APPLICATION_JSON, false, null, null, null, null,
+				tokenDetails.getToken(), tokenDetails.getTokenType());
 		if (!ServicesUtil.isEmpty(restResponse) && restResponse.getResponseCode() >= 200
 				&& restResponse.getResponseCode() <= 400) {
 			exLogs = new LinkedMultiValueMap<String, ExecutionLog>();

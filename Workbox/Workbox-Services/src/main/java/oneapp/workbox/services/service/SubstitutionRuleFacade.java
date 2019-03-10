@@ -3,8 +3,6 @@ package oneapp.workbox.services.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -20,6 +18,7 @@ import oneapp.workbox.services.dto.ResponseMessage;
 import oneapp.workbox.services.dto.RestResponse;
 import oneapp.workbox.services.dto.SubstitutionRuleResponseDto;
 import oneapp.workbox.services.dto.SubstitutionRulesDto;
+import oneapp.workbox.services.dto.TokenDetailsDto;
 import oneapp.workbox.services.dto.UserTaskMappingDto;
 import oneapp.workbox.services.util.OAuth;
 import oneapp.workbox.services.util.PMCConstant;
@@ -31,16 +30,6 @@ import oneapp.workbox.services.util.UserManagementUtil;
 public class SubstitutionRuleFacade implements SubstitutionRuleFacadeLocal {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubstitutionRuleFacade.class);
-
-	@Autowired
-	OAuth oAuth;
-
-	String[] tokens = null;
-
-	@PostConstruct
-	public void executeAfterConstructor() {
-		tokens = oAuth.getToken();
-	}
 
 	@Autowired
 	private SubstitutionRuleDao substitutionDaoNew;
@@ -231,11 +220,12 @@ public class SubstitutionRuleFacade implements SubstitutionRuleFacadeLocal {
 	public List<String> getRecipientUser(String taskId, String type, JSONObject resource) {
 		List<String> resultList = new ArrayList<String>();
 		JSONObject resources = resource;
+		TokenDetailsDto tokenDetails = OAuth.getToken();
 		try {
 			if (type.equals(PMCConstant.FORWARD_TASK)) {
 				String requestUrl = PMCConstant.REQUEST_URL_INST + "task-instances/" + taskId;
 				RestResponse responseObject = RestUtil.callRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, null,
-						"GET", "application/json", false, null, null, null, null, tokens[0], tokens[1]);
+						"GET", "application/json", false, null, null, null, null, tokenDetails.getToken(), tokenDetails.getTokenType());
 				if(!ServicesUtil.isEmpty(responseObject)) {
 					resources = (JSONObject) responseObject.getResponseObject();
 				}
@@ -300,9 +290,9 @@ public class SubstitutionRuleFacade implements SubstitutionRuleFacadeLocal {
 	public String updateRecipientUserInWorkflow(String taskId, String payload) {
 		try {
 			String requestUrl = PMCConstant.REQUEST_URL_INST + "task-instances/" + taskId;
-
+			TokenDetailsDto tokenDetails = OAuth.getToken();
 			RestResponse restResponse = RestUtil.callRestService(requestUrl, PMCConstant.SAML_HEADER_KEY_TI, payload,
-					"PATCH", "application/json", false, "Fetch", null, null, null, tokens[0], tokens[1]);
+					"PATCH", "application/json", false, "Fetch", null, null, null, tokenDetails.getToken(), tokenDetails.getTokenType());
 			if (!ServicesUtil.isEmpty(restResponse) && (restResponse.getResponseCode() >= 200)
 					&& (restResponse.getResponseCode() <= 207)) {
 				taskOwnersDao.deleteUser(taskId, null);
